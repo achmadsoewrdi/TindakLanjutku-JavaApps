@@ -3,6 +3,7 @@
  */
 
 package com.mycompany.tindaklanjutku;
+import com.mycompany.tindaklanjutku.view.loginForm;
 
 /**
  *
@@ -11,6 +12,6 @@ package com.mycompany.tindaklanjutku;
 public class TindakLanjutKu {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        new loginForm().setVisible(true);
     }
 }

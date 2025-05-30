@@ -24,7 +24,7 @@ public class Koneksi {
     public static Connection configDB() throws SQLException{
         try {
 //        inisialisasi variable untuk nama db
-        String url = "jdbc:mysql://localhost/tindak_lanjutku";
+        String url = "jdbc:mysql://localhost/tindaklanjutku";
         
 //        Driver        
         DriverManager.registerDriver(new com.mysql.jdbc.Driver());
