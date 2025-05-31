@@ -3,6 +3,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package com.mycompany.tindaklanjutku.view;
+import com.mycompany.tindaklanjutku.Koneksi;
+import com.toedter.calendar.JDateChooser;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.sql.Connection;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -15,7 +25,165 @@ public class uploadTugas extends javax.swing.JFrame {
      */
     public uploadTugas() {
         initComponents();
+        loadPJ();
+        loadKategori();
     }
+
+    
+    class pjItem{
+        private int id;
+        private String nama;
+        
+        public pjItem(int id, String nama){
+            this.id = id;
+            this.nama = nama;
+        }
+        
+        public int getId(){
+            return id;
+        }
+        
+        @Override
+        public String toString(){
+            return nama;
+        }
+    }
+    
+    class kategoriItem{
+        private int id;
+        private String nama;
+        
+        public kategoriItem(int id, String nama){
+            this.id = id;
+            this.nama = nama;
+        }
+        
+        public int getId(){
+            return id;
+        }
+        
+        @Override
+        public String toString() {
+            return nama;
+        }
+    }
+    
+    private void loadKategori(){
+        try {
+            Connection conn = Koneksi.configDB();
+            String sql = "SELECT id_kategori, nama_kategori FROM kategori";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            ResultSet rs = pst.executeQuery();
+            
+            DefaultComboBoxModel model = new DefaultComboBoxModel();
+            model.addElement("pilih Kategori");
+            while (rs.next()) {
+                int idKategori = rs.getInt("id_kategori");
+                String nama = rs.getString("nama_kategori");
+                model.addElement(new kategoriItem(idKategori, nama));
+            }
+            comboBoxKategori.setModel(model);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Gagal memuat Kategori");
+        }
+    }
+    
+    private void loadPJ(){
+        try {
+            Connection conn = Koneksi.configDB();
+            String sql = "SELECT pj.id_pj, u.namaUsr " +
+                     "FROM penanggung_jawab pj " +
+                     "JOIN user u ON pj.id_user = u.Id_usr";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            ResultSet rs = pst.executeQuery();
+            
+            DefaultComboBoxModel model = new DefaultComboBoxModel();
+            model.addElement("Pilih Penanggung Jawab");
+            
+            while (rs.next()) {
+                int idPj = rs.getInt("id_pj");
+                String nama = rs.getString("namaUsr");
+                model.addElement(new pjItem(idPj, nama)); // Tambah item ke combo box
+            }
+            
+            comboBoxPJ.setModel(model);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Gagal memuat Penanggung Jawab");
+        }
+            
+    }
+    
+    private void uTugas() {
+    String namaTugas = judul.getText().trim();
+    String desk = deskripsi.getText().trim();
+    java.util.Date tanggal = date.getDate();
+
+    // Validasi input
+    if (namaTugas.isEmpty() || desk.isEmpty() || tanggal == null) {
+        JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
+        return;
+    }
+
+    if (comboBoxPJ.getSelectedIndex() <= 0) {
+        JOptionPane.showMessageDialog(this, "Pilih Penanggung Jawab!");
+        return;
+    }
+
+    if (comboBoxKategori.getSelectedIndex() <= 0) {
+        JOptionPane.showMessageDialog(this, "Pilih Kategori!");
+        return;
+    }
+
+    try {
+        // Ambil tanggal & konversi ke SQL Date
+        java.sql.Date sqlDeadline = new java.sql.Date(tanggal.getTime());
+
+        // Ambil item dari combo box
+        pjItem selectedPJ = (pjItem) comboBoxPJ.getSelectedItem();
+        kategoriItem selectedKategori = (kategoriItem) comboBoxKategori.getSelectedItem();
+
+        // Status default (jika ada field status di tabel tugas)
+        String status = "Belum Dimulai";
+
+        // SQL Insert
+        String sql = "INSERT INTO tugas (judul, deskripsi, deadline, id_pj, id_kategori) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = Koneksi.configDB(); 
+             PreparedStatement pst = conn.prepareStatement(sql)) {
+
+            pst.setString(1, namaTugas);
+            pst.setString(2, desk);
+            pst.setDate(3, sqlDeadline);
+            pst.setInt(4, selectedPJ.getId());
+            pst.setInt(5, selectedKategori.getId());
+
+            pst.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Tugas berhasil diunggah!");
+            // Reset form jika perlu
+            judul.setText("");
+            deskripsi.setText("");
+            date.setDate(null);
+            comboBoxPJ.setSelectedIndex(0);
+            comboBoxKategori.setSelectedIndex(0);
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Gagal menyimpan tugas: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
+
+    
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -40,14 +208,16 @@ public class uploadTugas extends javax.swing.JFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        roundedTextField1 = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
+        judul = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
         jLabel5 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        comboBoxKategori = new javax.swing.JComboBox<>();
         jLabel6 = new javax.swing.JLabel();
-        roundedTextField2 = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
-        jDateChooser1 = new com.toedter.calendar.JDateChooser();
+        date = new com.toedter.calendar.JDateChooser();
         jLabel7 = new javax.swing.JLabel();
         roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
+        comboBoxPJ = new javax.swing.JComboBox<>();
+        deskripsi = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
+        jLabel8 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new java.awt.Dimension(1111, 703));
@@ -138,7 +308,7 @@ public class uploadTugas extends javax.swing.JFrame {
                 .addComponent(kategoriItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(catatanKerjaItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 196, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 197, Short.MAX_VALUE)
                 .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -158,29 +328,26 @@ public class uploadTugas extends javax.swing.JFrame {
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel4.setText("Nama Tugas");
 
-        roundedTextField1.setBackground(new java.awt.Color(255, 255, 255));
-        roundedTextField1.setForeground(new java.awt.Color(51, 51, 51));
+        judul.setBackground(new java.awt.Color(255, 255, 255));
+        judul.setForeground(new java.awt.Color(51, 51, 51));
 
         jLabel5.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         jLabel5.setForeground(new java.awt.Color(51, 51, 51));
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel5.setText("Kategori");
 
-        jComboBox1.setBackground(new java.awt.Color(255, 255, 255));
-        jComboBox1.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
-        jComboBox1.setForeground(new java.awt.Color(51, 51, 51));
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4", "item 5", " " }));
+        comboBoxKategori.setBackground(new java.awt.Color(255, 255, 255));
+        comboBoxKategori.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        comboBoxKategori.setForeground(new java.awt.Color(51, 51, 51));
+        comboBoxKategori.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4", "item 5", " " }));
 
         jLabel6.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         jLabel6.setForeground(new java.awt.Color(51, 51, 51));
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel6.setText("Penanggung Jawab");
 
-        roundedTextField2.setBackground(new java.awt.Color(255, 255, 255));
-        roundedTextField2.setForeground(new java.awt.Color(51, 51, 51));
-
-        jDateChooser1.setBackground(new java.awt.Color(255, 255, 255));
-        jDateChooser1.setForeground(new java.awt.Color(51, 51, 51));
+        date.setBackground(new java.awt.Color(255, 255, 255));
+        date.setForeground(new java.awt.Color(51, 51, 51));
 
         jLabel7.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(51, 51, 51));
@@ -197,54 +364,63 @@ public class uploadTugas extends javax.swing.JFrame {
             }
         });
 
+        comboBoxPJ.setBackground(new java.awt.Color(255, 255, 255));
+        comboBoxPJ.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        comboBoxPJ.setForeground(new java.awt.Color(51, 51, 51));
+        comboBoxPJ.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4", "item 5", " " }));
+
+        deskripsi.setBackground(new java.awt.Color(255, 255, 255));
+        deskripsi.setForeground(new java.awt.Color(51, 51, 51));
+
+        jLabel8.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        jLabel8.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel8.setText("Deskripsi");
+
         javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
         panelCustom1.setLayout(panelCustom1Layout);
         panelCustom1Layout.setHorizontalGroup(
             panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelCustom1Layout.createSequentialGroup()
                 .addComponent(panelCustom2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(panelCustom1Layout.createSequentialGroup()
-                        .addGap(74, 74, 74)
-                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(panelCustom1Layout.createSequentialGroup()
-                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(266, 266, 266)
-                                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addContainerGap(247, Short.MAX_VALUE))
-                            .addGroup(panelCustom1Layout.createSequentialGroup()
-                                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(panelCustom1Layout.createSequentialGroup()
-                                        .addComponent(jLabel1)
-                                        .addGap(429, 429, 429)
-                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 713, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelCustom1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelCustom1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 377, Short.MAX_VALUE)
+                        .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(336, 336, 336))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
+                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
+                                .addGap(74, 74, 74)
                                 .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelCustom1Layout.createSequentialGroup()
-                                        .addGap(10, 10, 10)
-                                        .addComponent(roundedTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addGroup(panelCustom1Layout.createSequentialGroup()
-                                        .addGap(6, 6, 6)
-                                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelCustom1Layout.createSequentialGroup()
-                                        .addGap(41, 41, 41)
-                                        .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(266, 266, 266)
+                                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(panelCustom1Layout.createSequentialGroup()
+                                            .addComponent(jLabel1)
+                                            .addGap(429, 429, 429)
+                                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 713, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addGroup(panelCustom1Layout.createSequentialGroup()
+                                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(282, 282, 282)
+                                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(panelCustom1Layout.createSequentialGroup()
+                                        .addComponent(judul, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGap(35, 35, 35)
-                                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(roundedTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 331, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(72, 72, 72))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelCustom1Layout.createSequentialGroup()
-                                .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(336, 336, 336))))))
+                                        .addComponent(comboBoxPJ, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(panelCustom1Layout.createSequentialGroup()
+                                        .addComponent(comboBoxKategori, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(41, 41, 41)
+                                        .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
+                                .addGap(92, 92, 92)
+                                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(deskripsi, javax.swing.GroupLayout.PREFERRED_SIZE, 689, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         panelCustom1Layout.setVerticalGroup(
             panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -261,18 +437,22 @@ public class uploadTugas extends javax.swing.JFrame {
                     .addComponent(jLabel4)
                     .addComponent(jLabel6))
                 .addGap(29, 29, 29)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(roundedTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(roundedTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(judul, javax.swing.GroupLayout.DEFAULT_SIZE, 42, Short.MAX_VALUE)
+                    .addComponent(comboBoxPJ))
                 .addGap(18, 18, 18)
                 .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(jLabel7))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
                 .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jComboBox1)
-                    .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(55, 55, 55)
+                    .addComponent(date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(comboBoxKategori, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(37, 37, 37)
+                .addComponent(jLabel8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(deskripsi, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -296,7 +476,7 @@ public class uploadTugas extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-        // TODO add your handling code here:
+        uTugas();
     }//GEN-LAST:event_roundedButton1ActionPerformed
 
     /**
@@ -336,10 +516,12 @@ public class uploadTugas extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton catatanKerjaItem;
+    private javax.swing.JComboBox<String> comboBoxKategori;
+    private javax.swing.JComboBox<String> comboBoxPJ;
     private javax.swing.JButton dashboarItem;
+    private com.toedter.calendar.JDateChooser date;
+    private com.mycompany.tindaklanjutku.custom.RoundedTextField deskripsi;
     private javax.swing.JButton jButton6;
-    private javax.swing.JComboBox<String> jComboBox1;
-    private com.toedter.calendar.JDateChooser jDateChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -347,15 +529,15 @@ public class uploadTugas extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
+    private com.mycompany.tindaklanjutku.custom.RoundedTextField judul;
     private javax.swing.JButton kategoriItem;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom1;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
     private javax.swing.JButton pjItem;
     private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton1;
-    private com.mycompany.tindaklanjutku.custom.RoundedTextField roundedTextField1;
-    private com.mycompany.tindaklanjutku.custom.RoundedTextField roundedTextField2;
     private javax.swing.JButton tugasItem;
     // End of variables declaration//GEN-END:variables
 }

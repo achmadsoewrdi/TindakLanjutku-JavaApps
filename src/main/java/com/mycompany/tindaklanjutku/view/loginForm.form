@@ -252,6 +252,9 @@
                   <Color blue="e5" green="57" red="42" type="rgb"/>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loginBtnActionPerformed"/>
+              </Events>
             </Component>
             <Component class="com.mycompany.tindaklanjutku.custom.RoundedButton" name="SignupBtn">
               <Properties>
