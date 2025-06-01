@@ -24,6 +24,7 @@ public class registerForm extends javax.swing.JFrame {
     public registerForm() {
         initComponents();
         loadDivisi();
+        
     }
     
     // Inner class untuk menyimpan data divisi
@@ -104,7 +105,7 @@ private void loadDivisi() {
         
         try {
             Connection conn = Koneksi.configDB();
-            String sql = "INSERT INTO users (namaUsr, email, pw, id_divisi) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO user (namaUsr, email, pw, id_divisi) VALUES (?, ?, ?, ?)";
             
             try (PreparedStatement pst = conn.prepareStatement(sql)) {
                 pst.setString(1, username);
@@ -312,7 +313,7 @@ private void loadDivisi() {
     }// </editor-fold>//GEN-END:initComponents
 
     private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-        // TODO add your handling code here:
+        registerAction();
     }//GEN-LAST:event_roundedButton1ActionPerformed
 
     /**

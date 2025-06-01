@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
+import org.mindrot.jbcrypt.BCrypt;
 
 
 /**
@@ -50,29 +51,33 @@ public class loginForm extends javax.swing.JFrame {
         return;
     }
 
-    try {
-        Connection conn = Koneksi.configDB();
-        String sql = "SELECT * FROM user WHERE namaUsr = ? AND pw = ?";
+try {
+    Connection conn = Koneksi.configDB();
+    String sql = "SELECT * FROM user WHERE namaUsr = ?";
+    
+    try (PreparedStatement pst = conn.prepareStatement(sql)) {
+        pst.setString(1, username);
         
-        try (PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setString(1, username);
-            pst.setString(2, password);
-            
-            try (ResultSet rs = pst.executeQuery()) {
-                if(rs.next()) {
+        try (ResultSet rs = pst.executeQuery()) {
+            if (rs.next()) {
+                String hashedPassword = rs.getString("pw"); // ambil hash dari DB
+
+                if (BCrypt.checkpw(password, hashedPassword)) {
                     // Login berhasil
                     JOptionPane.showMessageDialog(this, "Login berhasil!");
                     new tugas().setVisible(true); // Ganti dengan form utama Anda
                     dispose();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Username atau password salah!");
+                    JOptionPane.showMessageDialog(this, "Password salah!");
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "Username tidak ditemukan!");
             }
         }
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
-        ex.printStackTrace();
     }
+} catch (Exception e) {
+    JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
+}
 }
 
     /**
@@ -150,6 +155,11 @@ public class loginForm extends javax.swing.JFrame {
         loginBtn.setText("Login");
         loginBtn.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         loginBtn.setHoverBackgroundColor(new java.awt.Color(66, 87, 229));
+        loginBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loginBtnActionPerformed(evt);
+            }
+        });
 
         SignupBtn.setBackground(new java.awt.Color(78, 75, 209));
         SignupBtn.setText("Register");
@@ -261,6 +271,10 @@ public class loginForm extends javax.swing.JFrame {
     private void usnFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usnFieldActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_usnFieldActionPerformed
+
+    private void loginBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginBtnActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_loginBtnActionPerformed
 
     /**
      * @param args the command line arguments
