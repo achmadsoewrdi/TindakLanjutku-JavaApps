@@ -64,6 +64,18 @@
             <version>8.4.1</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>com.codenameone</groupId>
+            <artifactId>codenameone-core</artifactId>
+            <version>7.0.182</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.consol.citrus</groupId>
+            <artifactId>citrus-jdbc</artifactId>
+            <version>3.4.1</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

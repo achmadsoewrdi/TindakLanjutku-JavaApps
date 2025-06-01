@@ -3,6 +3,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package com.mycompany.tindaklanjutku.view;
+import com.mycompany.tindaklanjutku.Koneksi;
+import java.awt.*;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.*;
 
 /**
  *
@@ -15,9 +23,145 @@ public class tugasUser extends javax.swing.JFrame {
      */
     public tugasUser() {
         initComponents();
+        loadTugasData();
     }
     
-    
+private void loadTugasData() {
+        try (Connection conn = Koneksi.configDB();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM tugas");
+             ResultSet rs = pstmt.executeQuery()) {
+
+            DefaultTableModel model = new DefaultTableModel() {
+                public boolean isCellEditable(int row, int column) {
+                    return column == 4; // hanya kolom status
+                }
+
+                public Class<?> getColumnClass(int columnIndex) {
+                    switch (columnIndex) {
+                        case 0: return Integer.class;
+                        case 3: return Date.class;
+                        default: return String.class;
+                    }
+                }
+            };
+
+            model.addColumn("ID");
+            model.addColumn("Nama Tugas");
+            model.addColumn("Deskripsi");
+            model.addColumn("Deadline");
+            model.addColumn("Status");
+
+            while (rs.next()) {
+                model.addRow(new Object[] {
+                    rs.getInt("id_tugas"),
+                    rs.getString("judul"),
+                    rs.getString("deskripsi"),
+                    rs.getDate("deadline"),
+                    rs.getString("status")
+                });
+            }
+
+            customTable1.setModel(model);
+
+            // Atur kolom
+            TableColumnModel columnModel = customTable1.getColumnModel();
+            columnModel.getColumn(0).setPreferredWidth(50);
+            columnModel.getColumn(1).setPreferredWidth(200);
+            columnModel.getColumn(2).setPreferredWidth(300);
+            columnModel.getColumn(3).setPreferredWidth(100);
+            columnModel.getColumn(4).setPreferredWidth(80);
+
+            // Renderer
+            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+            centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            DefaultTableCellRenderer dateRenderer = new DefaultTableCellRenderer() {
+                protected void setValue(Object value) {
+                    if (value instanceof Date) {
+                        setText(dateFormat.format((Date) value));
+                    } else {
+                        super.setValue(value);
+                    }
+                }
+            };
+
+            for (int i = 0; i < customTable1.getColumnCount(); i++) {
+                if (i == 3) {
+                    dateRenderer.setHorizontalAlignment(JLabel.CENTER);
+                    customTable1.getColumnModel().getColumn(i).setCellRenderer(dateRenderer);
+                } else {
+                    customTable1.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+                }
+            }
+
+            // Renderer Status
+            customTable1.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
+
+            // ComboBox untuk status
+            JComboBox<String> statusComboBox = new JComboBox<>(new String[]{"belum", "progres", "selesai"});
+            customTable1.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(statusComboBox));
+
+            // Listener untuk update status
+            customTable1.getModel().addTableModelListener(new TableModelListener() {
+                public void tableChanged(TableModelEvent e) {
+                    if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 4) {
+                        int row = e.getFirstRow();
+                        int taskId = (int) customTable1.getValueAt(row, 0);
+                        String newStatus = (String) customTable1.getValueAt(row, 4);
+                        updateTaskStatus(taskId, newStatus);
+                    }
+                }
+            });
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Gagal memuat data: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateTaskStatus(int taskId, String newStatus) {
+        String lowerStatus = newStatus.toLowerCase();
+        if (!lowerStatus.equals("belum") && !lowerStatus.equals("progres") && !lowerStatus.equals("selesai")) {
+            JOptionPane.showMessageDialog(this, "Status tidak valid!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try (Connection conn = Koneksi.configDB();
+             PreparedStatement pstmt = conn.prepareStatement("UPDATE tugas SET status = ? WHERE id_tugas = ?")) {
+
+            pstmt.setString(1, lowerStatus);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+            loadTugasData();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Gagal update status: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static class StatusRenderer extends DefaultTableCellRenderer {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setHorizontalAlignment(JLabel.CENTER);
+            if (!isSelected && value != null) {
+                String status = value.toString().toLowerCase();
+                switch (status) {
+                    case "belum":
+                        c.setBackground(new Color(255, 153, 153));
+                        break;
+                    case "progres":
+                        c.setBackground(new Color(255, 255, 153));
+                        break;
+                    case "selesai":
+                        c.setBackground(new Color(144, 238, 144));
+                        break;
+                    default:
+                        c.setBackground(Color.WHITE);
+                }
+            }
+            return c;
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -32,7 +176,6 @@ public class tugasUser extends javax.swing.JFrame {
         panelCustom2 = new com.mycompany.tindaklanjutku.custom.panelCustom();
         jLabel2 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
-        dashboarItem = new javax.swing.JButton();
         tugasItem = new javax.swing.JButton();
         pjItem = new javax.swing.JButton();
         kategoriItem = new javax.swing.JButton();
@@ -46,7 +189,7 @@ public class tugasUser extends javax.swing.JFrame {
         customTable1 = new com.mycompany.tindaklanjutku.custom.CustomTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(1111, 703));
+        setPreferredSize(new java.awt.Dimension(1111, 741));
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setRoundBottomLeft(8);
@@ -65,12 +208,6 @@ public class tugasUser extends javax.swing.JFrame {
         jLabel2.setText("Tindak Lanjutku");
 
         jSeparator1.setForeground(new java.awt.Color(204, 204, 204));
-
-        dashboarItem.setBackground(new java.awt.Color(78, 75, 209));
-        dashboarItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
-        dashboarItem.setForeground(new java.awt.Color(255, 255, 255));
-        dashboarItem.setText("Dashboard");
-        dashboarItem.setBorder(null);
 
         tugasItem.setBackground(new java.awt.Color(78, 75, 209));
         tugasItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
@@ -114,7 +251,6 @@ public class tugasUser extends javax.swing.JFrame {
             panelCustom2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
-            .addComponent(dashboarItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(tugasItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(pjItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(kategoriItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -128,8 +264,6 @@ public class tugasUser extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(dashboarItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tugasItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -138,7 +272,7 @@ public class tugasUser extends javax.swing.JFrame {
                 .addComponent(kategoriItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(catatanKerjaItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 197, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -275,7 +409,6 @@ public class tugasUser extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton catatanKerjaItem;
     private com.mycompany.tindaklanjutku.custom.CustomTable customTable1;
-    private javax.swing.JButton dashboarItem;
     private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

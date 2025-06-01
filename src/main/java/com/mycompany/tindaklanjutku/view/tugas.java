@@ -154,6 +154,7 @@ public class tugas extends javax.swing.JFrame {
             JOptionPane.ERROR_MESSAGE);
     }
 }
+    
 private void updateTaskStatus(int taskId, String newStatus) {
     // Validasi nilai status yang valid
     String lowerStatus = newStatus.toLowerCase();
@@ -226,6 +227,29 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
     }
 }
 
+private void deleteTask(int taskId) {
+    try (Connection conn = Koneksi.configDB();
+         PreparedStatement pstmt = conn.prepareStatement("DELETE FROM tugas WHERE id_tugas = ?")) {
+        
+        pstmt.setInt(1, taskId);
+        int affectedRows = pstmt.executeUpdate();
+        
+        if (affectedRows > 0) {
+            JOptionPane.showMessageDialog(this, "Tugas berhasil dihapus!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+            loadTugasData(); // Refresh tabel setelah hapus
+        } else {
+            JOptionPane.showMessageDialog(this, "Tugas tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+    } catch (SQLException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, 
+            "Gagal menghapus tugas: " + e.getMessage(), 
+            "Database Error", 
+            JOptionPane.ERROR_MESSAGE);
+    }
+}
+
     
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -248,6 +272,8 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
         roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableTugasAdmin = new com.mycompany.tindaklanjutku.custom.CustomTable();
+        roundedButton2 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
+        roundedButton3 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -375,6 +401,26 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
         tableTugasAdmin.setForeground(new java.awt.Color(51, 51, 51));
         jScrollPane1.setViewportView(tableTugasAdmin);
 
+        roundedButton2.setBackground(new java.awt.Color(255, 51, 51));
+        roundedButton2.setText("Hapus Tugas");
+        roundedButton2.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        roundedButton2.setHoverBackgroundColor(new java.awt.Color(255, 153, 153));
+        roundedButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                roundedButton2ActionPerformed(evt);
+            }
+        });
+
+        roundedButton3.setBackground(new java.awt.Color(0, 204, 0));
+        roundedButton3.setText("Edit Tugas");
+        roundedButton3.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        roundedButton3.setHoverBackgroundColor(new java.awt.Color(0, 255, 51));
+        roundedButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                roundedButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
         panelCustom1.setLayout(panelCustom1Layout);
         panelCustom1Layout.setHorizontalGroup(
@@ -395,11 +441,18 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
                                 .addGap(8, 8, 8))
                             .addGroup(panelCustom1Layout.createSequentialGroup()
                                 .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 444, Short.MAX_VALUE)
-                                .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(panelCustom1Layout.createSequentialGroup()
                         .addGap(50, 50, 50)
-                        .addComponent(jScrollPane1)))
+                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 761, Short.MAX_VALUE)
+                            .addGroup(panelCustom1Layout.createSequentialGroup()
+                                .addComponent(roundedButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(roundedButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE)))))
                 .addGap(47, 47, 47))
         );
         panelCustom1Layout.setVerticalGroup(
@@ -413,12 +466,15 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(roundedButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(115, 115, 115))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 342, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(36, 36, 36)
+                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(roundedButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(roundedButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(roundedButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(149, 149, 149))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -443,6 +499,53 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
         new uploadTugas().setVisible(true);
         dispose();
     }//GEN-LAST:event_roundedButton1ActionPerformed
+
+    private void roundedButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton2ActionPerformed
+            int selectedRow = tableTugasAdmin.getSelectedRow();
+
+    if (selectedRow != -1) {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Yakin ingin menghapus tugas ini?", "Konfirmasi Hapus",
+                JOptionPane.YES_NO_OPTION);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            // Ambil ID tugas dari kolom ke-0
+            int idTugas = (int) tableTugasAdmin.getValueAt(selectedRow, 0);
+
+            try (Connection conn = Koneksi.configDB();
+                 PreparedStatement pstmt = conn.prepareStatement("DELETE FROM tugas WHERE id_tugas = ?")) {
+                
+                pstmt.setInt(1, idTugas);
+                pstmt.executeUpdate();
+                
+                // Refresh tabel (lebih aman daripada hanya hapus dari model)
+                loadTugasData();
+
+                JOptionPane.showMessageDialog(this, "Tugas berhasil dihapus.");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, 
+                    "Gagal menghapus tugas: " + e.getMessage(), 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    } else {
+        JOptionPane.showMessageDialog(this, "Silakan pilih tugas yang ingin dihapus terlebih dahulu.");
+    }
+
+    }//GEN-LAST:event_roundedButton2ActionPerformed
+
+    private void roundedButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton3ActionPerformed
+            int selectedRow = tableTugasAdmin.getSelectedRow();
+    if (selectedRow != -1) {
+        // Ambil ID tugas dari kolom ke-0
+        int idTugas = (int) tableTugasAdmin.getValueAt(selectedRow, 0);
+        new EditTugas(idTugas).setVisible(true); // Kirim ID tugas
+        dispose();
+    } else {
+        JOptionPane.showMessageDialog(this, "Silakan pilih tugas yang ingin diubah terlebih dahulu.");
+    }
+    }//GEN-LAST:event_roundedButton3ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -495,6 +598,8 @@ private static class StatusRenderer extends DefaultTableCellRenderer {
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
     private javax.swing.JButton pjItem;
     private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton1;
+    private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton2;
+    private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton3;
     private com.mycompany.tindaklanjutku.custom.CustomTable tableTugasAdmin;
     private javax.swing.JButton tugasItem;
     // End of variables declaration//GEN-END:variables
