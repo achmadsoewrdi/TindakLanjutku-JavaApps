@@ -1,128 +1,94 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
-package com.mycompany.tindaklanjutku.view;
-import com.mycompany.tindaklanjutku.Koneksi;
-import com.toedter.calendar.JDateChooser;
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.sql.Connection;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JOptionPane;
-
-/**
- *
- * @author ASUS VIVO
- */
-public class uploadTugas extends javax.swing.JFrame {
+    /*
+    * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+    * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+    */
+    package admin;
+import admin.tugas;
+    import com.mycompany.tindaklanjutku.Koneksi;
+import com.mycompany.tindaklanjutku.tugas.loginForm;
+    import com.toedter.calendar.JDateChooser;
+    import java.awt.*;
+    import java.awt.event.*;
+    import java.sql.*;
+    import java.text.SimpleDateFormat;
+    import java.util.*;
+    import java.sql.Connection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+    import javax.swing.DefaultComboBoxModel;
+    import javax.swing.JOptionPane;
 
     /**
-     * Creates new form uploadTugas
+     *
+     * @author ASUS VIVO
      */
-    public uploadTugas() {
-        initComponents();
-        loadPJ();
-        loadKategori();
-    }
+    public class uploadTugas extends javax.swing.JFrame {
 
-    
-    class pjItem{
-        private int id;
-        private String nama;
-        
-        public pjItem(int id, String nama){
-            this.id = id;
-            this.nama = nama;
+        private String username;
+        public uploadTugas(String username) {
+            this.username = username;
+            initComponents();
+            loadPJ();
         }
+
         
-        public int getId(){
-            return id;
-        }
-        
-        @Override
-        public String toString(){
-            return nama;
-        }
-    }
-    
-    class kategoriItem{
-        private int id;
-        private String nama;
-        
-        public kategoriItem(int id, String nama){
-            this.id = id;
-            this.nama = nama;
-        }
-        
-        public int getId(){
-            return id;
-        }
-        
-        @Override
-        public String toString() {
-            return nama;
-        }
-    }
-    
-    private void loadKategori(){
-        try {
-            Connection conn = Koneksi.configDB();
-            String sql = "SELECT id_kategori, nama_kategori FROM kategori";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            ResultSet rs = pst.executeQuery();
+        class pjItem{
+            private int id;
+            private String nama;
             
-            DefaultComboBoxModel model = new DefaultComboBoxModel();
-            model.addElement("pilih Kategori");
-            while (rs.next()) {
-                int idKategori = rs.getInt("id_kategori");
-                String nama = rs.getString("nama_kategori");
-                model.addElement(new kategoriItem(idKategori, nama));
-            }
-            comboBoxKategori.setModel(model);
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Gagal memuat Kategori");
-        }
-    }
-    
-    private void loadPJ(){
-        try {
-            Connection conn = Koneksi.configDB();
-            String sql = "SELECT pj.id_pj, u.namaUsr " +
-                     "FROM penanggung_jawab pj " +
-                     "JOIN user u ON pj.id_user = u.Id_usr";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            ResultSet rs = pst.executeQuery();
-            
-            DefaultComboBoxModel model = new DefaultComboBoxModel();
-            model.addElement("Pilih Penanggung Jawab");
-            
-            while (rs.next()) {
-                int idPj = rs.getInt("id_pj");
-                String nama = rs.getString("namaUsr");
-                model.addElement(new pjItem(idPj, nama)); // Tambah item ke combo box
+            public pjItem(int id, String nama){
+                this.id = id;
+                this.nama = nama;
             }
             
-            comboBoxPJ.setModel(model);
+            public int getId(){
+                return id;
+            }
             
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Gagal memuat Penanggung Jawab");
+            @Override
+            public String toString(){
+                return nama;
+            }
         }
-            
-    }
-    
-    private void uTugas() {
+        
+        
+        
+        
+        private void loadPJ(){
+            try {
+                Connection conn = Koneksi.configDB();
+                String sql = "SELECT pj.id_pj, u.namaUsr " +
+                        "FROM penanggung_jawab pj " +
+                        "JOIN user u ON pj.id_user = u.Id_usr";
+                PreparedStatement pst = conn.prepareStatement(sql);
+                ResultSet rs = pst.executeQuery();
+                
+                DefaultComboBoxModel model = new DefaultComboBoxModel();
+                model.addElement("Pilih Penanggung Jawab");
+                
+                while (rs.next()) {
+                    int idPj = rs.getInt("id_pj");
+                    String nama = rs.getString("namaUsr");
+                    model.addElement(new pjItem(idPj, nama)); // Tambah item ke combo box
+                }
+                
+                comboBoxPJ.setModel(model);
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Gagal memuat Penanggung Jawab");
+            }
+                
+        }
+        
+        private void uTugas() {
     String namaTugas = judul.getText().trim();
     String desk = deskripsi.getText().trim();
     java.util.Date tanggal = date.getDate();
+    String kategoriStr = kategori1.getText().trim();
 
     // Validasi input
-    if (namaTugas.isEmpty() || desk.isEmpty() || tanggal == null) {
+    if (namaTugas.isEmpty() || desk.isEmpty() || tanggal == null || kategoriStr.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
         return;
     }
@@ -132,43 +98,59 @@ public class uploadTugas extends javax.swing.JFrame {
         return;
     }
 
-    if (comboBoxKategori.getSelectedIndex() <= 0) {
-        JOptionPane.showMessageDialog(this, "Pilih Kategori!");
-        return;
-    }
-
     try {
-        // Ambil tanggal & konversi ke SQL Date
         java.sql.Date sqlDeadline = new java.sql.Date(tanggal.getTime());
-
-        // Ambil item dari combo box
         pjItem selectedPJ = (pjItem) comboBoxPJ.getSelectedItem();
-        kategoriItem selectedKategori = (kategoriItem) comboBoxKategori.getSelectedItem();
 
-        // Status default (jika ada field status di tabel tugas)
-        String status = "Belum Dimulai";
+        try (Connection conn = Koneksi.configDB()) {
+            conn.setAutoCommit(false); // mulai transaksi
 
-        // SQL Insert
-        String sql = "INSERT INTO tugas (judul, deskripsi, deadline, id_pj, id_kategori) VALUES (?, ?, ?, ?, ?)";
+            // 1. Cek apakah kategori sudah ada
+            String cekKategori = "SELECT id_kategori FROM kategori WHERE nama_kategori = ?";
+            PreparedStatement pstCek = conn.prepareStatement(cekKategori);
+            pstCek.setString(1, kategoriStr);
+            ResultSet rs = pstCek.executeQuery();
 
-        try (Connection conn = Koneksi.configDB(); 
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+            int idKategori;
+            if (rs.next()) {
+                // kategori sudah ada
+                idKategori = rs.getInt("id_kategori");
+            } else {
+                // kategori belum ada, insert baru
+                String insertKategori = "INSERT INTO kategori (nama_kategori) VALUES (?)";
+                PreparedStatement pstInsertKat = conn.prepareStatement(insertKategori, Statement.RETURN_GENERATED_KEYS);
+                pstInsertKat.setString(1, kategoriStr);
+                pstInsertKat.executeUpdate();
 
+                ResultSet rsKeys = pstInsertKat.getGeneratedKeys();
+                if (rsKeys.next()) {
+                    idKategori = rsKeys.getInt(1);
+                } else {
+                    throw new SQLException("Gagal mendapatkan ID kategori baru.");
+                }
+            }
+
+            // 2. Insert tugas menggunakan idKategori
+            String insertTugas = "INSERT INTO tugas (judul, deskripsi, deadline, id_pj, id_kategori) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement pst = conn.prepareStatement(insertTugas);
             pst.setString(1, namaTugas);
             pst.setString(2, desk);
             pst.setDate(3, sqlDeadline);
             pst.setInt(4, selectedPJ.getId());
-            pst.setInt(5, selectedKategori.getId());
-
+            pst.setInt(5, idKategori);
             pst.executeUpdate();
 
+            conn.commit(); // simpan transaksi
+
             JOptionPane.showMessageDialog(this, "Tugas berhasil diunggah!");
-            // Reset form jika perlu
+            // Reset form
             judul.setText("");
             deskripsi.setText("");
             date.setDate(null);
             comboBoxPJ.setSelectedIndex(0);
-            comboBoxKategori.setSelectedIndex(0);
+            kategori1.setText("");
+            new tugas(username).setVisible(true);
+            dispose();
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Gagal menyimpan tugas: " + e.getMessage());
@@ -181,16 +163,18 @@ public class uploadTugas extends javax.swing.JFrame {
     }
 }
 
-    
-    
-    
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
+
+        
+        
+        
+
+        /**
+         * This method is called from within the constructor to initialize the form.
+         * WARNING: Do NOT modify this code. The content of this method is always
+         * regenerated by the Form Editor.
+         */
+        @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -210,7 +194,6 @@ public class uploadTugas extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         judul = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
         jLabel5 = new javax.swing.JLabel();
-        comboBoxKategori = new javax.swing.JComboBox<>();
         jLabel6 = new javax.swing.JLabel();
         date = new com.toedter.calendar.JDateChooser();
         jLabel7 = new javax.swing.JLabel();
@@ -218,9 +201,9 @@ public class uploadTugas extends javax.swing.JFrame {
         comboBoxPJ = new javax.swing.JComboBox<>();
         deskripsi = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
         jLabel8 = new javax.swing.JLabel();
+        kategori1 = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(1111, 703));
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -241,30 +224,55 @@ public class uploadTugas extends javax.swing.JFrame {
         dashboarItem.setForeground(new java.awt.Color(255, 255, 255));
         dashboarItem.setText("Dashboard");
         dashboarItem.setBorder(null);
+        dashboarItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dashboarItemActionPerformed(evt);
+            }
+        });
 
         tugasItem.setBackground(new java.awt.Color(78, 75, 209));
         tugasItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         tugasItem.setForeground(new java.awt.Color(255, 255, 255));
         tugasItem.setText("Tugas");
         tugasItem.setBorder(null);
+        tugasItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tugasItemActionPerformed(evt);
+            }
+        });
 
         pjItem.setBackground(new java.awt.Color(78, 75, 209));
         pjItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         pjItem.setForeground(new java.awt.Color(255, 255, 255));
-        pjItem.setText("Penanggung Jawab");
+        pjItem.setText("Daftar user");
         pjItem.setBorder(null);
+        pjItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pjItemActionPerformed(evt);
+            }
+        });
 
         kategoriItem.setBackground(new java.awt.Color(78, 75, 209));
         kategoriItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         kategoriItem.setForeground(new java.awt.Color(255, 255, 255));
-        kategoriItem.setText("Kategori");
+        kategoriItem.setText("Divisi");
         kategoriItem.setBorder(null);
+        kategoriItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                kategoriItemActionPerformed(evt);
+            }
+        });
 
         catatanKerjaItem.setBackground(new java.awt.Color(78, 75, 209));
         catatanKerjaItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         catatanKerjaItem.setForeground(new java.awt.Color(255, 255, 255));
         catatanKerjaItem.setText("Catatan Kerja");
         catatanKerjaItem.setBorder(null);
+        catatanKerjaItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                catatanKerjaItemActionPerformed(evt);
+            }
+        });
 
         jButton6.setBackground(new java.awt.Color(255, 51, 51));
         jButton6.setFont(new java.awt.Font("Poppins", 1, 18)); // NOI18N
@@ -336,11 +344,6 @@ public class uploadTugas extends javax.swing.JFrame {
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel5.setText("Kategori");
 
-        comboBoxKategori.setBackground(new java.awt.Color(255, 255, 255));
-        comboBoxKategori.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
-        comboBoxKategori.setForeground(new java.awt.Color(51, 51, 51));
-        comboBoxKategori.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4", "item 5", " " }));
-
         jLabel6.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         jLabel6.setForeground(new java.awt.Color(51, 51, 51));
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -377,6 +380,9 @@ public class uploadTugas extends javax.swing.JFrame {
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel8.setText("Deskripsi");
 
+        kategori1.setBackground(new java.awt.Color(255, 255, 255));
+        kategori1.setForeground(new java.awt.Color(51, 51, 51));
+
         javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
         panelCustom1.setLayout(panelCustom1Layout);
         panelCustom1Layout.setHorizontalGroup(
@@ -389,37 +395,35 @@ public class uploadTugas extends javax.swing.JFrame {
                         .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(336, 336, 336))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
-                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
-                                .addGap(74, 74, 74)
-                                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(panelCustom1Layout.createSequentialGroup()
-                                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(266, 266, 266)
-                                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addGroup(panelCustom1Layout.createSequentialGroup()
-                                            .addComponent(jLabel1)
-                                            .addGap(429, 429, 429)
-                                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 713, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(panelCustom1Layout.createSequentialGroup()
-                                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(282, 282, 282)
-                                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(panelCustom1Layout.createSequentialGroup()
-                                        .addComponent(judul, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(35, 35, 35)
-                                        .addComponent(comboBoxPJ, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(panelCustom1Layout.createSequentialGroup()
-                                        .addComponent(comboBoxKategori, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(41, 41, 41)
-                                        .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
-                                .addGap(92, 92, 92)
-                                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(74, 74, 74)
+                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelCustom1Layout.createSequentialGroup()
+                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(266, 266, 266)
+                                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(panelCustom1Layout.createSequentialGroup()
+                                    .addComponent(jLabel1)
+                                    .addGap(429, 429, 429)
+                                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 713, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(panelCustom1Layout.createSequentialGroup()
+                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(282, 282, 282)
+                                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(panelCustom1Layout.createSequentialGroup()
+                                .addComponent(judul, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(35, 35, 35)
+                                .addComponent(comboBoxPJ, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(panelCustom1Layout.createSequentialGroup()
                                     .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(deskripsi, javax.swing.GroupLayout.PREFERRED_SIZE, 689, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                    .addGap(590, 590, 590))
+                                .addGroup(panelCustom1Layout.createSequentialGroup()
+                                    .addComponent(kategori1, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGap(45, 45, 45)
+                                    .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(deskripsi, javax.swing.GroupLayout.PREFERRED_SIZE, 707, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         panelCustom1Layout.setVerticalGroup(
@@ -445,10 +449,10 @@ public class uploadTugas extends javax.swing.JFrame {
                     .addComponent(jLabel5)
                     .addComponent(jLabel7))
                 .addGap(18, 18, 18)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(comboBoxKategori, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(37, 37, 37)
+                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(kategori1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
                 .addComponent(jLabel8)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(deskripsi, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -471,52 +475,108 @@ public class uploadTugas extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton6ActionPerformed
+        private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
+            uTugas();
+        }//GEN-LAST:event_roundedButton1ActionPerformed
 
-    private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-        uTugas();
-    }//GEN-LAST:event_roundedButton1ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+            try {
+        // Show confirmation dialog
+        int confirm = JOptionPane.showConfirmDialog(
+            this, 
+            "Apakah Anda yakin ingin logout?", 
+            "Konfirmasi Logout", 
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            
+            // Close current window
+            this.dispose();
+            
+            // Open login form
+            java.awt.EventQueue.invokeLater(() -> {
+                new loginForm().setVisible(true);
+            });
+            
         }
-        //</editor-fold>
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                this, 
+                "Error saat logout: " + e.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE
+            );
+            e.printStackTrace();
+        }
+        }//GEN-LAST:event_jButton6ActionPerformed
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new uploadTugas().setVisible(true);
+    private void dashboarItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboarItemActionPerformed
+        new AdminDashboard(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_dashboarItemActionPerformed
+
+    private void tugasItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItemActionPerformed
+            try {
+                new tugas(username).setVisible(true);
+            } catch (SQLException ex) {
+                Logger.getLogger(uploadTugas.class.getName()).log(Level.SEVERE, null, ex);
             }
-        });
-    }
+    }//GEN-LAST:event_tugasItemActionPerformed
+
+    private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
+        new MenambahkanRole(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_pjItemActionPerformed
+
+    private void kategoriItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_kategoriItemActionPerformed
+        new uploadDivisi(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_kategoriItemActionPerformed
+
+    private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
+        new CatatanAdmin(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_catatanKerjaItemActionPerformed
+
+        /**
+         * @param args the command line arguments
+         */
+        public static void main(String args[]) {
+            /* Set the Nimbus look and feel */
+            //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+            /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+            * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+            */
+            try {
+                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+            } catch (ClassNotFoundException ex) {
+                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            } catch (InstantiationException ex) {
+                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            } catch (IllegalAccessException ex) {
+                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+            //</editor-fold>
+
+            /* Create and display the form */
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    new uploadTugas("admin").setVisible(true);
+                }
+            });
+        }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton catatanKerjaItem;
-    private javax.swing.JComboBox<String> comboBoxKategori;
     private javax.swing.JComboBox<String> comboBoxPJ;
     private javax.swing.JButton dashboarItem;
     private com.toedter.calendar.JDateChooser date;
@@ -533,6 +593,7 @@ public class uploadTugas extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private com.mycompany.tindaklanjutku.custom.RoundedTextField judul;
+    private com.mycompany.tindaklanjutku.custom.RoundedTextField kategori1;
     private javax.swing.JButton kategoriItem;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom1;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
@@ -540,4 +601,4 @@ public class uploadTugas extends javax.swing.JFrame {
     private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton1;
     private javax.swing.JButton tugasItem;
     // End of variables declaration//GEN-END:variables
-}
+    }
