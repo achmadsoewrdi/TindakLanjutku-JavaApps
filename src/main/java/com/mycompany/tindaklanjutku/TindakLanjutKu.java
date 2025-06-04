@@ -3,7 +3,7 @@
  */
 
 package com.mycompany.tindaklanjutku;
-import com.mycompany.tindaklanjutku.view.loginForm;
+import com.mycompany.tindaklanjutku.tugas.loginForm;
 
 /**
  *

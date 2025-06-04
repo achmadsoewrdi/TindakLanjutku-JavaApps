@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package com.mycompany.tindaklanjutku.view;
+package com.mycompany.tindaklanjutku.tugas;
 import com.mycompany.tindaklanjutku.Koneksi;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

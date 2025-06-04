@@ -2,19 +2,165 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package com.mycompany.tindaklanjutku.view;
+package com.mycompany.tindaklanjutku.tugas;
+import com.mycompany.tindaklanjutku.Koneksi;
+import java.awt.*;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.*;
 
 /**
  *
  * @author ASUS VIVO
  */
-public class uploadDivisi extends javax.swing.JFrame {
+public class tugasUser extends javax.swing.JFrame {
 
     /**
-     * Creates new form uploadDivisi
+     * Creates new form tugasUser
      */
-    public uploadDivisi() {
+    public tugasUser() {
         initComponents();
+        loadTugasData();
+    }
+    
+private void loadTugasData() {
+        try (Connection conn = Koneksi.configDB();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM tugas");
+             ResultSet rs = pstmt.executeQuery()) {
+
+            DefaultTableModel model = new DefaultTableModel() {
+                public boolean isCellEditable(int row, int column) {
+                    return column == 4; // hanya kolom status
+                }
+
+                public Class<?> getColumnClass(int columnIndex) {
+                    switch (columnIndex) {
+                        case 0: return Integer.class;
+                        case 3: return Date.class;
+                        default: return String.class;
+                    }
+                }
+            };
+
+            model.addColumn("ID");
+            model.addColumn("Nama Tugas");
+            model.addColumn("Deskripsi");
+            model.addColumn("Deadline");
+            model.addColumn("Status");
+
+            while (rs.next()) {
+                model.addRow(new Object[] {
+                    rs.getInt("id_tugas"),
+                    rs.getString("judul"),
+                    rs.getString("deskripsi"),
+                    rs.getDate("deadline"),
+                    rs.getString("status")
+                });
+            }
+
+            customTable1.setModel(model);
+
+            // Atur kolom
+            TableColumnModel columnModel = customTable1.getColumnModel();
+            columnModel.getColumn(0).setPreferredWidth(50);
+            columnModel.getColumn(1).setPreferredWidth(200);
+            columnModel.getColumn(2).setPreferredWidth(300);
+            columnModel.getColumn(3).setPreferredWidth(100);
+            columnModel.getColumn(4).setPreferredWidth(80);
+
+            // Renderer
+            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+            centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            DefaultTableCellRenderer dateRenderer = new DefaultTableCellRenderer() {
+                protected void setValue(Object value) {
+                    if (value instanceof Date) {
+                        setText(dateFormat.format((Date) value));
+                    } else {
+                        super.setValue(value);
+                    }
+                }
+            };
+
+            for (int i = 0; i < customTable1.getColumnCount(); i++) {
+                if (i == 3) {
+                    dateRenderer.setHorizontalAlignment(JLabel.CENTER);
+                    customTable1.getColumnModel().getColumn(i).setCellRenderer(dateRenderer);
+                } else {
+                    customTable1.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+                }
+            }
+
+            // Renderer Status
+            customTable1.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
+
+            // ComboBox untuk status
+            JComboBox<String> statusComboBox = new JComboBox<>(new String[]{"belum", "progres", "selesai"});
+            customTable1.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(statusComboBox));
+
+            // Listener untuk update status
+            customTable1.getModel().addTableModelListener(new TableModelListener() {
+                public void tableChanged(TableModelEvent e) {
+                    if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 4) {
+                        int row = e.getFirstRow();
+                        int taskId = (int) customTable1.getValueAt(row, 0);
+                        String newStatus = (String) customTable1.getValueAt(row, 4);
+                        updateTaskStatus(taskId, newStatus);
+                    }
+                }
+            });
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Gagal memuat data: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateTaskStatus(int taskId, String newStatus) {
+        String lowerStatus = newStatus.toLowerCase();
+        if (!lowerStatus.equals("belum") && !lowerStatus.equals("progres") && !lowerStatus.equals("selesai")) {
+            JOptionPane.showMessageDialog(this, "Status tidak valid!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try (Connection conn = Koneksi.configDB();
+             PreparedStatement pstmt = conn.prepareStatement("UPDATE tugas SET status = ? WHERE id_tugas = ?")) {
+
+            pstmt.setString(1, lowerStatus);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+            loadTugasData();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Gagal update status: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static class StatusRenderer extends DefaultTableCellRenderer {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setHorizontalAlignment(JLabel.CENTER);
+            if (!isSelected && value != null) {
+                String status = value.toString().toLowerCase();
+                switch (status) {
+                    case "belum":
+                        c.setBackground(new Color(255, 153, 153));
+                        break;
+                    case "progres":
+                        c.setBackground(new Color(255, 255, 153));
+                        break;
+                    case "selesai":
+                        c.setBackground(new Color(144, 238, 144));
+                        break;
+                    default:
+                        c.setBackground(Color.WHITE);
+                }
+            }
+            return c;
+        }
     }
 
     /**
@@ -30,23 +176,19 @@ public class uploadDivisi extends javax.swing.JFrame {
         panelCustom2 = new com.mycompany.tindaklanjutku.custom.panelCustom();
         jLabel2 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
-        dashboarItem = new javax.swing.JButton();
         tugasItem = new javax.swing.JButton();
         pjItem = new javax.swing.JButton();
         kategoriItem = new javax.swing.JButton();
         catatanKerjaItem = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
         jSeparator2 = new javax.swing.JSeparator();
+        jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        roundedTextField1 = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
-        jComboBox1 = new javax.swing.JComboBox<>();
-        roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        customTable1 = new com.mycompany.tindaklanjutku.custom.CustomTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(1111, 702));
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setRoundBottomLeft(8);
@@ -65,12 +207,6 @@ public class uploadDivisi extends javax.swing.JFrame {
         jLabel2.setText("Tindak Lanjutku");
 
         jSeparator1.setForeground(new java.awt.Color(204, 204, 204));
-
-        dashboarItem.setBackground(new java.awt.Color(78, 75, 209));
-        dashboarItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
-        dashboarItem.setForeground(new java.awt.Color(255, 255, 255));
-        dashboarItem.setText("Dashboard");
-        dashboarItem.setBorder(null);
 
         tugasItem.setBackground(new java.awt.Color(78, 75, 209));
         tugasItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
@@ -114,7 +250,6 @@ public class uploadDivisi extends javax.swing.JFrame {
             panelCustom2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
-            .addComponent(dashboarItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(tugasItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(pjItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(kategoriItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -128,8 +263,6 @@ public class uploadDivisi extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(dashboarItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tugasItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -138,48 +271,45 @@ public class uploadDivisi extends javax.swing.JFrame {
                 .addComponent(kategoriItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(catatanKerjaItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 196, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         jLabel1.setFont(new java.awt.Font("Poppins", 1, 24)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel1.setText("Tambah Divisi");
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("Tugas");
+
+        jSeparator2.setForeground(new java.awt.Color(51, 51, 51));
 
         jLabel3.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         jLabel3.setForeground(new java.awt.Color(51, 51, 51));
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel3.setText("Admin");
+        jLabel3.setText("Nama Anggota");
 
-        jSeparator2.setForeground(new java.awt.Color(51, 51, 51));
-
-        jLabel4.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        jLabel4.setFont(new java.awt.Font("Poppins", 1, 18)); // NOI18N
         jLabel4.setForeground(new java.awt.Color(51, 51, 51));
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel4.setText("Nama DIvisi");
+        jLabel4.setText("Manajemen Tugas");
 
-        jLabel6.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
-        jLabel6.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel6.setText("Penanggung Jawab");
+        customTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
 
-        roundedTextField1.setBackground(new java.awt.Color(255, 255, 255));
-        roundedTextField1.setForeground(new java.awt.Color(51, 51, 51));
+            },
+            new String [] {
+                "Judul Tugas", "Kategori", "PJ", "Deadline", "Status"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, true
+            };
 
-        jComboBox1.setBackground(new java.awt.Color(255, 255, 255));
-        jComboBox1.setFont(new java.awt.Font("Poppins", 0, 12)); // NOI18N
-        jComboBox1.setForeground(new java.awt.Color(51, 51, 51));
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        roundedButton1.setBackground(new java.awt.Color(78, 75, 209));
-        roundedButton1.setText("Simpan");
-        roundedButton1.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
-        roundedButton1.setHoverBackgroundColor(new java.awt.Color(102, 102, 255));
-        roundedButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                roundedButton1ActionPerformed(evt);
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
+        customTable1.setFont(new java.awt.Font("Poppins", 0, 12)); // NOI18N
+        jScrollPane1.setViewportView(customTable1);
 
         javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
         panelCustom1.setLayout(panelCustom1Layout);
@@ -187,52 +317,39 @@ public class uploadDivisi extends javax.swing.JFrame {
             panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelCustom1Layout.createSequentialGroup()
                 .addComponent(panelCustom2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(68, 68, 68)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelCustom1Layout.createSequentialGroup()
-                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(266, 266, 266)
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(54, 54, 54)
+                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(panelCustom1Layout.createSequentialGroup()
                         .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelCustom1Layout.createSequentialGroup()
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(41, 41, 41))
+                    .addGroup(panelCustom1Layout.createSequentialGroup()
+                        .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 772, Short.MAX_VALUE)
                             .addGroup(panelCustom1Layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addGap(429, 429, 429)
-                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 713, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(panelCustom1Layout.createSequentialGroup()
-                                    .addComponent(roundedTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGap(37, 37, 37)
-                                    .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelCustom1Layout.createSequentialGroup()
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 282, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGap(286, 286, 286))))
-                        .addGap(68, 68, 68))))
+                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(33, 33, 33))))
         );
         panelCustom1Layout.setVerticalGroup(
             panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(panelCustom2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(panelCustom1Layout.createSequentialGroup()
-                .addGap(67, 67, 67)
+                .addContainerGap(76, Short.MAX_VALUE)
                 .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(37, 37, 37)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel6))
-                .addGap(18, 18, 18)
-                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(roundedTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(28, 28, 28)
-                .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(80, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -253,10 +370,6 @@ public class uploadDivisi extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
-    private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_roundedButton1ActionPerformed
-
     /**
      * @param args the command line arguments
      */
@@ -274,42 +387,39 @@ public class uploadDivisi extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(uploadDivisi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(tugasUser.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(uploadDivisi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(tugasUser.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(uploadDivisi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(tugasUser.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(uploadDivisi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(tugasUser.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new uploadDivisi().setVisible(true);
+                new tugasUser().setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton catatanKerjaItem;
-    private javax.swing.JButton dashboarItem;
+    private com.mycompany.tindaklanjutku.custom.CustomTable customTable1;
     private javax.swing.JButton jButton6;
-    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel6;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JButton kategoriItem;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom1;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
     private javax.swing.JButton pjItem;
-    private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton1;
-    private com.mycompany.tindaklanjutku.custom.RoundedTextField roundedTextField1;
     private javax.swing.JButton tugasItem;
     // End of variables declaration//GEN-END:variables
 }

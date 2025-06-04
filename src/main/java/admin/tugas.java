@@ -2,9 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package com.mycompany.tindaklanjutku.view;
+package admin;
 
 import com.mycompany.tindaklanjutku.Koneksi;
+import com.mycompany.tindaklanjutku.tugas.loginForm;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -35,8 +36,9 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class tugas extends javax.swing.JFrame {
 
-
-    public tugas() throws SQLException {
+    private String username;
+    public tugas(String username) throws SQLException {
+        this.username = username;
         initComponents();
         loadTugasData();
     }
@@ -300,6 +302,11 @@ private void deleteTask(int taskId) {
         dashboarItem.setForeground(new java.awt.Color(255, 255, 255));
         dashboarItem.setText("Dashboard");
         dashboarItem.setBorder(null);
+        dashboarItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dashboarItemActionPerformed(evt);
+            }
+        });
 
         tugasItem.setBackground(new java.awt.Color(78, 75, 209));
         tugasItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
@@ -310,20 +317,35 @@ private void deleteTask(int taskId) {
         pjItem.setBackground(new java.awt.Color(78, 75, 209));
         pjItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         pjItem.setForeground(new java.awt.Color(255, 255, 255));
-        pjItem.setText("Penanggung Jawab");
+        pjItem.setText("Daftar User");
         pjItem.setBorder(null);
+        pjItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pjItemActionPerformed(evt);
+            }
+        });
 
         kategoriItem.setBackground(new java.awt.Color(78, 75, 209));
         kategoriItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         kategoriItem.setForeground(new java.awt.Color(255, 255, 255));
-        kategoriItem.setText("Kategori");
+        kategoriItem.setText("Divisi");
         kategoriItem.setBorder(null);
+        kategoriItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                kategoriItemActionPerformed(evt);
+            }
+        });
 
         catatanKerjaItem.setBackground(new java.awt.Color(78, 75, 209));
         catatanKerjaItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         catatanKerjaItem.setForeground(new java.awt.Color(255, 255, 255));
         catatanKerjaItem.setText("Catatan Kerja");
         catatanKerjaItem.setBorder(null);
+        catatanKerjaItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                catatanKerjaItemActionPerformed(evt);
+            }
+        });
 
         jButton6.setBackground(new java.awt.Color(255, 51, 51));
         jButton6.setFont(new java.awt.Font("Poppins", 1, 18)); // NOI18N
@@ -492,11 +514,40 @@ private void deleteTask(int taskId) {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        // TODO add your handling code here:
+        try {
+        // Show confirmation dialog
+        int confirm = JOptionPane.showConfirmDialog(
+            this, 
+            "Apakah Anda yakin ingin logout?", 
+            "Konfirmasi Logout", 
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            
+            // Close current window
+            this.dispose();
+            
+            // Open login form
+            java.awt.EventQueue.invokeLater(() -> {
+                new loginForm().setVisible(true);
+            });
+            
+        }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                this, 
+                "Error saat logout: " + e.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE
+            );
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-        new uploadTugas().setVisible(true);
+        new uploadTugas(username).setVisible(true);
         dispose();
     }//GEN-LAST:event_roundedButton1ActionPerformed
 
@@ -540,12 +591,32 @@ private void deleteTask(int taskId) {
     if (selectedRow != -1) {
         // Ambil ID tugas dari kolom ke-0
         int idTugas = (int) tableTugasAdmin.getValueAt(selectedRow, 0);
-        new EditTugas(idTugas).setVisible(true); // Kirim ID tugas
+        new EditTugas(idTugas,username).setVisible(true); // Kirim ID tugas
         dispose();
     } else {
         JOptionPane.showMessageDialog(this, "Silakan pilih tugas yang ingin diubah terlebih dahulu.");
     }
     }//GEN-LAST:event_roundedButton3ActionPerformed
+
+    private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
+        new MenambahkanRole(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_pjItemActionPerformed
+
+    private void kategoriItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_kategoriItemActionPerformed
+        new uploadDivisi(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_kategoriItemActionPerformed
+
+    private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
+        new CatatanAdmin(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_catatanKerjaItemActionPerformed
+
+    private void dashboarItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboarItemActionPerformed
+        new AdminDashboard(username).setVisible(true);
+        dispose();
+    }//GEN-LAST:event_dashboarItemActionPerformed
 
     /**
      * @param args the command line arguments
