@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
 import admin.UserSession;
-import com.mycompany.tindaklanjutku.tugas.loginForm.SessionManager;
+import auth.SessionManager;
 
 
 public class UploadCatatan extends javax.swing.JFrame {

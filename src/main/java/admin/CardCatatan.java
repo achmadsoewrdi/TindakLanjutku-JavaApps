@@ -14,6 +14,7 @@ public class CardCatatan extends panelCustom {
     private JLabel nilaiTanggal;
     private JLabel nilaiTugas;
     private JButton btnHapus;
+    private String cardId;
     
     
     
@@ -107,6 +108,11 @@ public class CardCatatan extends panelCustom {
     }
     
     public void setCardId(String id) {
+        this.cardId = id; // Store the ID
         btnHapus.setActionCommand(id);
+    }
+
+    public String getCardId() {
+               return this.cardId;
     }
 }

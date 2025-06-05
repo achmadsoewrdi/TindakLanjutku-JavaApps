@@ -58,144 +58,215 @@ public class MenambahkanRole extends javax.swing.JFrame {
     }
     
     private void loadUserData() {
-        try (Connection conn = Koneksi.configDB()) {
-            // Query dengan JOIN ke tabel divisi
-            String query = "SELECT u.namaUsr, u.email, u.role, u.id_divisi, d.nama_divisi " +
-                           "FROM user u LEFT JOIN divisi d ON u.id_divisi = d.id_divisi";
-            PreparedStatement pst = conn.prepareStatement(query);
-            ResultSet rs = pst.executeQuery();
+    try (Connection conn = Koneksi.configDB()) {
+        // Query dengan JOIN ke tabel divisi
+        String query = "SELECT u.namaUsr, u.email, u.role, u.id_divisi, d.nama_divisi " +
+                       "FROM user u LEFT JOIN divisi d ON u.id_divisi = d.id_divisi";
+        PreparedStatement pst = conn.prepareStatement(query);
+        ResultSet rs = pst.executeQuery();
 
-            DefaultTableModel model = new DefaultTableModel() {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return column == 2 || column == 3 || column == 4; // Kolom Role, id_divisi, dan Divisi bisa di-edit
+        DefaultTableModel model = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 2 || column == 4; // Kolom Role dan Divisi (tampilan) bisa di-edit
+            }
+        };
+
+        model.addColumn("Nama User");
+        model.addColumn("Email");
+        model.addColumn("Role");
+        model.addColumn("id_divisi");   // Kolom tersembunyi (index 3)
+        model.addColumn("Divisi");      // Kolom tampilan (index 4)
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("namaUsr"),
+                rs.getString("email"),
+                rs.getString("role"),
+                rs.getObject("id_divisi"), // Bisa null
+                rs.getString("nama_divisi") // Bisa null
+            });
+        }
+
+        daftarUsr.setModel(model);
+
+        // Sembunyikan kolom id_divisi (kolom index 3)
+        daftarUsr.removeColumn(daftarUsr.getColumnModel().getColumn(3));
+
+        // Lebar kolom
+        TableColumnModel columnModel = daftarUsr.getColumnModel();
+        columnModel.getColumn(0).setPreferredWidth(200); // Nama User
+        columnModel.getColumn(1).setPreferredWidth(250); // Email
+        columnModel.getColumn(2).setPreferredWidth(100); // Role
+        columnModel.getColumn(3).setPreferredWidth(150); // Divisi (tampilan) - sekarang index 3 setelah remove
+
+        // Tengah semua kolom
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+        for (int i = 0; i < daftarUsr.getColumnCount(); i++) {
+            daftarUsr.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // Editor combobox untuk kolom Role
+        JComboBox<String> roleCombobox = new JComboBox<>(new String[]{"anggota", "pj","admin"});
+        DefaultCellEditor roleEditor = new DefaultCellEditor(roleCombobox);
+        daftarUsr.getColumnModel().getColumn(2).setCellEditor(roleEditor);
+
+        // Editor combobox untuk kolom Divisi
+        JComboBox<String> divisiComboBox = new JComboBox<>();
+        divisiComboBox.addItem(""); // Untuk nilai null
+        for (String namaDivisi : divisiMap.values()) {
+            divisiComboBox.addItem(namaDivisi);
+        }
+        DefaultCellEditor divisiEditor = new DefaultCellEditor(divisiComboBox);
+        daftarUsr.getColumnModel().getColumn(3).setCellEditor(divisiEditor); // Index 3 setelah remove
+
+        // Listener untuk perubahan data
+        daftarUsr.getModel().addTableModelListener(e -> {
+            if (e.getType() == TableModelEvent.UPDATE) {
+                int row = e.getFirstRow();
+                int col = e.getColumn();
+                
+                String email = (String) daftarUsr.getValueAt(row, 1);
+                
+                if (col == 2) { // Kolom Role
+                    String newRole = (String) daftarUsr.getValueAt(row, 2);
+                    updateUserRole(email, newRole);
+                } 
+                else if (col == 4) { // Kolom Divisi tampilan di model (index 4 di underlying model)
+                    // Ambil nilai divisi yang dipilih dari tampilan table
+                    String selectedDivisi = (String) daftarUsr.getValueAt(row, 3); // Index 3 di tampilan
+                    
+                    // Dapatkan id_divisi yang sesuai dengan nama divisi
+                    Integer idDivisi = null;
+                    if (selectedDivisi != null && !selectedDivisi.trim().isEmpty()) {
+                        idDivisi = getDivisiIdByName(selectedDivisi);
+                        if (idDivisi == -1) {
+                            idDivisi = null; // Jika tidak ditemukan, set null
+                        }
+                    }
+                    
+                    // Update nilai di underlying model (kolom tersembunyi)
+                    DefaultTableModel tableModel = (DefaultTableModel) daftarUsr.getModel();
+                    tableModel.setValueAt(idDivisi, row, 3); // Update kolom id_divisi di underlying model
+                    
+                    updateUserDivisi(email, idDivisi);
                 }
-            };
-
-            model.addColumn("Nama User");
-            model.addColumn("Email");
-            model.addColumn("Role");
-            model.addColumn("id_divisi");   // Disembunyikan nanti
-            model.addColumn("Divisi");      // Ditampilkan
-
-            while (rs.next()) {
-                model.addRow(new Object[]{
-                    rs.getString("namaUsr"),
-                    rs.getString("email"),
-                    rs.getString("role"),
-                    rs.getObject("id_divisi"), // Bisa null
-                    rs.getString("nama_divisi") // Bisa null
-                });
             }
+        });
 
-            daftarUsr.setModel(model);
+    } catch (SQLException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this,
+                "Error loading data: " + e.getMessage(), 
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
-            // Sembunyikan kolom id_divisi (kolom index 3)
-            daftarUsr.removeColumn(daftarUsr.getColumnModel().getColumn(3));
+private int getDivisiIdByName(String namaDivisi) {
+    if (namaDivisi == null || namaDivisi.trim().isEmpty()) {
+        return -1;
+    }
+    
+    for (Map.Entry<Integer, String> entry : divisiMap.entrySet()) {
+        if (entry.getValue().equals(namaDivisi)) {
+            return entry.getKey();
+        }
+    }
+    return -1; // Tidak ditemukan
+}
 
-            // Lebar kolom
-            TableColumnModel columnModel = daftarUsr.getColumnModel();
-            columnModel.getColumn(0).setPreferredWidth(200); // Nama User
-            columnModel.getColumn(1).setPreferredWidth(250); // Email
-            columnModel.getColumn(2).setPreferredWidth(100); // Role
-            columnModel.getColumn(3).setPreferredWidth(150); // Divisi (tampilan)
+private void updateUserRole(String email, String newRole) {
+    try (Connection conn = Koneksi.configDB()) {
+        conn.setAutoCommit(false); // Mulai transaction
 
-            // Tengah semua kolom
-            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-            centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-            for (int i = 0; i < daftarUsr.getColumnCount(); i++) {
-                daftarUsr.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-            }
+        try {
+            // 1. Update role di tabel user
+            PreparedStatement updateUser = conn.prepareStatement(
+                    "UPDATE user SET role = ? WHERE email = ?");
+            updateUser.setString(1, newRole);
+            updateUser.setString(2, email);
+            updateUser.executeUpdate();
 
-            // Editor combobox untuk kolom Role
-            JComboBox<String> roleCombobox = new JComboBox<>(new String[]{"anggota", "pj","admin"});
-            DefaultCellEditor roleEditor = new DefaultCellEditor(roleCombobox);
-            daftarUsr.getColumnModel().getColumn(2).setCellEditor(roleEditor);
+            // 2. Jika role baru adalah "pj", tambahkan ke tabel penanggung_jawab
+            if ("pj".equalsIgnoreCase(newRole)) {
+                // Cek apakah user sudah ada di tabel penanggung_jawab
+                PreparedStatement checkPJ = conn.prepareStatement(
+                        "SELECT id_user FROM penanggung_jawab WHERE id_user = (SELECT id_usr FROM user WHERE email = ?)");
+                checkPJ.setString(1, email);
+                ResultSet rs = checkPJ.executeQuery();
 
-            // Editor combobox untuk kolom Divisi
-            JComboBox<String> divisiComboBox = new JComboBox<>();
-            divisiComboBox.addItem(""); // Untuk nilai null
-            for (String namaDivisi : divisiMap.values()) {
-                divisiComboBox.addItem(namaDivisi);
-            }
-            DefaultCellEditor divisiEditor = new DefaultCellEditor(divisiComboBox);
-            daftarUsr.getColumnModel().getColumn(3).setCellEditor(divisiEditor);
+                if (!rs.next()) { // Jika belum ada, ambil id_divisi dari user dan insert
+                    // Ambil id_divisi dari tabel user
+                    PreparedStatement getUserDivisi = conn.prepareStatement(
+                            "SELECT id_divisi FROM user WHERE email = ?");
+                    getUserDivisi.setString(1, email);
+                    ResultSet rsDivisi = getUserDivisi.executeQuery();
 
-            // Listener untuk perubahan data
-            daftarUsr.getModel().addTableModelListener(e -> {
-                if (e.getType() == TableModelEvent.UPDATE) {
-                    int row = e.getFirstRow();
-                    int col = e.getColumn();
-                    
-                    String email = (String) daftarUsr.getValueAt(row, 1);
-                    
-                    if (col == 2) { // Kolom Role
-                        String newRole = (String) daftarUsr.getValueAt(row, 2);
-                        updateUserRole(email, newRole);
-                    } 
-                    else if (col == 3) { // Kolom Divisi (tampilan)
-                        // Dapatkan id_divisi yang sesuai dengan nama divisi
-                        String selectedDivisi = (String) daftarUsr.getValueAt(row, 3);
-                        int idDivisi = getDivisiIdByName(selectedDivisi);
+                    if (rsDivisi.next()) {
+                        int idDivisi = rsDivisi.getInt("id_divisi");
                         
-                        // Update nilai di kolom tersembunyi (id_divisi)
-                        daftarUsr.setValueAt(idDivisi, row, 3); // Kolom tersembunyi
-                        
-                        updateUserDivisi(email, idDivisi);
+                        // Insert ke penanggung_jawab dengan id_divisi yang sama
+                        PreparedStatement insertPJ = conn.prepareStatement(
+                                "INSERT INTO penanggung_jawab (id_user, id_divisi) VALUES ((SELECT id_usr FROM user WHERE email = ?), ?)");
+                        insertPJ.setString(1, email);
+                        insertPJ.setInt(2, idDivisi);
+                        insertPJ.executeUpdate();
+                    } else {
+                        throw new SQLException("User tidak memiliki id_divisi yang valid!");
                     }
                 }
-            });
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Error loading data: " + e.getMessage(), 
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private int getDivisiIdByName(String namaDivisi) {
-        for (Map.Entry<Integer, String> entry : divisiMap.entrySet()) {
-            if (entry.getValue().equals(namaDivisi)) {
-                return entry.getKey();
+            } else {
+                // Jika role diubah dari "pj" ke role lain, hapus dari tabel penanggung_jawab
+                PreparedStatement deletePJ = conn.prepareStatement(
+                        "DELETE FROM penanggung_jawab WHERE id_user = (SELECT id_usr FROM user WHERE email = ?)");
+                deletePJ.setString(1, email);
+                deletePJ.executeUpdate();
             }
-        }
-        return -1; // Tidak ditemukan
-    }
 
-    private void updateUserRole(String email, String newRole) {
-        try (Connection conn = Koneksi.configDB()) {
-            PreparedStatement pst = conn.prepareStatement(
-                    "UPDATE user SET role = ? WHERE email = ?");
-            pst.setString(1, newRole);
-            pst.setString(2, email);
-            pst.executeUpdate();
+            conn.commit(); // Commit jika semua berhasil
+            JOptionPane.showMessageDialog(this, "Role berhasil diupdate!");
+
         } catch (SQLException e) {
+            conn.rollback(); // Rollback jika error
             JOptionPane.showMessageDialog(this, 
                     "Gagal mengupdate role: " + e.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, 
+                "Koneksi database error: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
     }
+}
     
-    private void updateUserDivisi(String email, int idDivisi) {
-        try (Connection conn = Koneksi.configDB()) {
-            PreparedStatement pst = conn.prepareStatement(
-                    "UPDATE user SET id_divisi = ? WHERE email = ?");
-            
-            if (idDivisi > 0) {
-                pst.setInt(1, idDivisi);
-            } else {
-                pst.setNull(1, java.sql.Types.INTEGER);
-            }
-            
-            pst.setString(2, email);
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, 
-                    "Gagal mengupdate divisi: " + e.getMessage(), 
-                    "Error", JOptionPane.ERROR_MESSAGE);
+    private void updateUserDivisi(String email, Integer idDivisi) {
+    try (Connection conn = Koneksi.configDB()) {
+        PreparedStatement pst = conn.prepareStatement(
+                "UPDATE user SET id_divisi = ? WHERE email = ?");
+        
+        if (idDivisi != null && idDivisi > 0) {
+            pst.setInt(1, idDivisi);
+        } else {
+            pst.setNull(1, java.sql.Types.INTEGER);
         }
+        
+        pst.setString(2, email);
+        int rowsAffected = pst.executeUpdate();
+        
+        if (rowsAffected > 0) {
+            JOptionPane.showMessageDialog(this, "Divisi berhasil diupdate!");
+        } else {
+            JOptionPane.showMessageDialog(this, "Gagal mengupdate divisi: User tidak ditemukan!");
+        }
+        
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, 
+                "Gagal mengupdate divisi: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
     }
+}
     
 
 

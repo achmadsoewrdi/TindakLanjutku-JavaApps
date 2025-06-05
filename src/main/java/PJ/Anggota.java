@@ -1,4 +1,4 @@
-package Anggota;
+package PJ;
 
 import com.mycompany.tindaklanjutku.Koneksi;
 import com.mycompany.tindaklanjutku.tugas.loginForm;
@@ -11,81 +11,69 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
-public class AnggotaDashboard extends javax.swing.JFrame {
+public class Anggota extends javax.swing.JFrame {
 
     private String username;
 
-    public AnggotaDashboard(String username) {
+    public Anggota(String username) {
         this.username = username;
         initComponents();
-        loadTugasData();
+        loadAnggotaData();
         namaAdmin.setText(username);
     }
 
-private void loadTugasData() {
-    try (Connection conn = Koneksi.configDB()) {
-        // Query untuk mendapatkan tugas yang diberikan kepada anggota yang sedang login
-        String query = "SELECT u.namaUsr, t.judul, t.deskripsi, t.deadline " +
-                      "FROM tugas_user tu " +
-                      "JOIN user u ON tu.id_user = u.id_usr " +
-                      "JOIN tugas t ON tu.id_tugas = t.id_tugas " +
-                      "WHERE u.namaUsr = ?";
-        
-        PreparedStatement pst = conn.prepareStatement(query);
-        pst.setString(1, username);
-        ResultSet rs = pst.executeQuery();
+    private void loadAnggotaData() {
+        try (Connection conn = Koneksi.configDB()) {
+            // Query untuk mendapatkan anggota yang satu divisi dengan penanggung jawab
+            String query = "SELECT u.namaUsr, d.nama_divisi " +
+                         "FROM user u " +
+                         "JOIN divisi d ON u.id_divisi = d.id_divisi " +
+                         "WHERE u.id_divisi = (SELECT id_divisi FROM penanggung_jawab WHERE id_user = " +
+                         "(SELECT id_usr FROM user WHERE namaUsr = ?)) " +
+                         "AND u.role = 'anggota'";
+            
+            PreparedStatement pst = conn.prepareStatement(query);
+            pst.setString(1, username);
+            ResultSet rs = pst.executeQuery();
 
-        DefaultTableModel model = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Tabel tidak bisa di-edit
+            DefaultTableModel model = new DefaultTableModel() {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; // Tabel tidak bisa di-edit
+                }
+            };
+
+            model.addColumn("Nama Anggota");
+            model.addColumn("Divisi");
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("namaUsr"),
+                    rs.getString("nama_divisi")
+                });
             }
-        };
 
-        // Tambahkan kolom-kolom yang dibutuhkan
-        model.addColumn("Nama Anggota");
-        model.addColumn("Judul Tugas");
-        model.addColumn("Deskripsi");
-        model.addColumn("Deadline");
+            anggota.setModel(model);
 
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getString("namaUsr"),
-                rs.getString("judul"),
-                rs.getString("deskripsi"),
-                rs.getString("deadline")
-            });
+            // Set lebar kolom
+            TableColumnModel columnModel = anggota.getColumnModel();
+            columnModel.getColumn(0).setPreferredWidth(200); // Nama Anggota
+            columnModel.getColumn(1).setPreferredWidth(150); // Divisi
+
+            // Tengah semua kolom
+            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+            centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+            for (int i = 0; i < anggota.getColumnCount(); i++) {
+                anggota.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error loading data: " + e.getMessage(), 
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        tabelTugas.setModel(model);
-
-        // Set lebar kolom
-        TableColumnModel columnModel = tabelTugas.getColumnModel();
-        columnModel.getColumn(0).setPreferredWidth(150); // Nama Anggota
-        columnModel.getColumn(1).setPreferredWidth(200); // Judul Tugas
-        columnModel.getColumn(2).setPreferredWidth(300); // Deskripsi
-        columnModel.getColumn(3).setPreferredWidth(100); // Deadline
-
-        // Tengah semua kolom
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        for (int i = 0; i < tabelTugas.getColumnCount(); i++) {
-            tabelTugas.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-
-        // Jika tidak ada data, tampilkan pesan
-        if (model.getRowCount() == 0) {
-            model.addRow(new Object[]{"Tidak ada tugas", "", "", ""});
-        }
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this,
-                "Error loading data: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
     }
-}
-
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -94,6 +82,8 @@ private void loadTugasData() {
         panelCustom2 = new com.mycompany.tindaklanjutku.custom.panelCustom();
         jLabel2 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
+        dashboardItem = new javax.swing.JButton();
+        pjItem = new javax.swing.JButton();
         catatanKerjaItem = new javax.swing.JButton();
         Logout = new javax.swing.JButton();
         tugasItem1 = new javax.swing.JButton();
@@ -101,7 +91,7 @@ private void loadTugasData() {
         jSeparator2 = new javax.swing.JSeparator();
         namaAdmin = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tabelTugas = new com.mycompany.tindaklanjutku.custom.CustomTable();
+        anggota = new com.mycompany.tindaklanjutku.custom.CustomTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -123,6 +113,28 @@ private void loadTugasData() {
         jLabel2.setText("Tindak Lanjutku");
 
         jSeparator1.setForeground(new java.awt.Color(204, 204, 204));
+
+        dashboardItem.setBackground(new java.awt.Color(78, 75, 209));
+        dashboardItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
+        dashboardItem.setForeground(new java.awt.Color(255, 255, 255));
+        dashboardItem.setText("Dashboard");
+        dashboardItem.setBorder(null);
+        dashboardItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dashboardItemActionPerformed(evt);
+            }
+        });
+
+        pjItem.setBackground(new java.awt.Color(78, 75, 209));
+        pjItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
+        pjItem.setForeground(new java.awt.Color(255, 255, 255));
+        pjItem.setText("Anggota");
+        pjItem.setBorder(null);
+        pjItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pjItemActionPerformed(evt);
+            }
+        });
 
         catatanKerjaItem.setBackground(new java.awt.Color(78, 75, 209));
         catatanKerjaItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
@@ -164,6 +176,8 @@ private void loadTugasData() {
             panelCustom2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
+            .addComponent(dashboardItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(pjItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(catatanKerjaItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(Logout, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(tugasItem1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -176,9 +190,11 @@ private void loadTugasData() {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(dashboardItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tugasItem1, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(pjItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(catatanKerjaItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 304, Short.MAX_VALUE)
@@ -188,16 +204,16 @@ private void loadTugasData() {
         jLabel1.setFont(new java.awt.Font("Poppins", 1, 24)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(51, 51, 51));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        jLabel1.setText("Tugas Anggota");
+        jLabel1.setText("Anggota");
 
         jSeparator2.setForeground(new java.awt.Color(51, 51, 51));
 
         namaAdmin.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         namaAdmin.setForeground(new java.awt.Color(51, 51, 51));
         namaAdmin.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        namaAdmin.setText("Nama Admin");
+        namaAdmin.setText("Nama Anggota");
 
-        jScrollPane1.setViewportView(tabelTugas);
+        jScrollPane1.setViewportView(anggota);
 
         javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
         panelCustom1.setLayout(panelCustom1Layout);
@@ -247,15 +263,15 @@ private void loadTugasData() {
     }// </editor-fold>//GEN-END:initComponents
 
     private void dashboardItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardItemActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_dashboardItemActionPerformed
 
     private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_pjItemActionPerformed
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
     private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
@@ -292,7 +308,7 @@ private void loadTugasData() {
     }//GEN-LAST:event_LogoutActionPerformed
 
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_tugasItem1ActionPerformed
 
     /**
@@ -312,27 +328,29 @@ private void loadTugasData() {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AnggotaDashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Anggota.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AnggotaDashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Anggota.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AnggotaDashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Anggota.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AnggotaDashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Anggota.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new AnggotaDashboard("USERNAME PJ").setVisible(true);
+                new Anggota("USERNAME PJ").setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Logout;
+    private com.mycompany.tindaklanjutku.custom.CustomTable anggota;
     private javax.swing.JButton catatanKerjaItem;
+    private javax.swing.JButton dashboardItem;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
@@ -341,7 +359,7 @@ private void loadTugasData() {
     private javax.swing.JLabel namaAdmin;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom1;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
-    private com.mycompany.tindaklanjutku.custom.CustomTable tabelTugas;
+    private javax.swing.JButton pjItem;
     private javax.swing.JButton tugasItem1;
     // End of variables declaration//GEN-END:variables
 }

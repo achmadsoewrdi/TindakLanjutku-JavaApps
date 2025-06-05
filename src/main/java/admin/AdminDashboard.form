@@ -147,7 +147,7 @@
                       <Component id="DivisiItem" min="-2" pref="57" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="catatanKerjaItem" min="-2" pref="57" max="-2" attributes="0"/>
-                      <EmptySpace pref="316" max="32767" attributes="0"/>
+                      <EmptySpace pref="279" max="32767" attributes="0"/>
                       <Component id="Logout" min="-2" pref="63" max="-2" attributes="0"/>
                   </Group>
               </Group>
