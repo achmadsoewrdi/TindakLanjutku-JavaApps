@@ -2,7 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package admin;
+package PJ;
+
+import admin.CardCatatan;
 import com.mycompany.tindaklanjutku.Koneksi;
 import com.mycompany.tindaklanjutku.custom.panelCustom;
 import com.mycompany.tindaklanjutku.tugas.loginForm;
@@ -16,8 +18,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,33 +25,44 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+
 /**
  *
  * @author ASUS VIVO
  */
-public class CatatanAdmin extends javax.swing.JFrame {
+public class LogCatatan extends javax.swing.JFrame {
 
     private String username;
-    public CatatanAdmin(String username) {
+    
+    public LogCatatan(String username) {
         this.username = username;
         initComponents();
-        tampilkanCatatan();
+        tampilkanCatatanPJ();
     }
     
     public panelCustom getCardCatatan() {
         return cardCatatan;
     }
     
+public void tampilkanCatatanPJ() {
+    String sql = "SELECT c.*, t.judul FROM catatan_hasil c " +
+                 "JOIN tugas t ON c.id_tugas = t.id_tugas " +
+                 "JOIN penanggung_jawab pj ON t.id_pj = pj.id_pj " +
+                 "JOIN user u ON pj.id_user = u.Id_usr " +
+                 "WHERE u.namaUsr = ?";
     
-
-public void tampilkanCatatan() {
-    String sql = "SELECT c.*, t.judul FROM catatan_hasil c JOIN tugas t ON c.id_tugas = t.id_tugas";
     try (Connection conn = Koneksi.configDB();
-         PreparedStatement pst = conn.prepareStatement(sql);
-         ResultSet rs = pst.executeQuery()) {
+         PreparedStatement pst = conn.prepareStatement(sql)) {
         
-        // Hitung jumlah catatan
-        List<CardCatatan> cards = new ArrayList<>();
+        pst.setString(1, username);
+        ResultSet rs = pst.executeQuery();
+        
+        JPanel containerDinamis = new JPanel();
+        containerDinamis.setLayout(new GridLayout(0, 2, 15, 15));
+        containerDinamis.setBackground(Color.WHITE);
+        
+        cardCatatan.removeAll();
+        
         while (rs.next()) {
             CardCatatan card = new CardCatatan(
                 rs.getString("dibuat_oleh"),
@@ -60,53 +71,33 @@ public void tampilkanCatatan() {
                 rs.getString("judul")
             );
             
+            // Set ID card
             String idCatatan = rs.getString("id_catatan");
             card.setCardId(idCatatan);
             
+            // Tambahkan action listener untuk tombol hapus
             card.addHapusListener(e -> {
                 int confirm = JOptionPane.showConfirmDialog(
-                    this, 
-                    "Apakah Anda yakin ingin menghapus catatan ini?", 
-                    "Konfirmasi Hapus", 
-                    JOptionPane.YES_NO_OPTION
+                    this,
+                    "Apakah Anda yakin ingin menghapus catatan ini?",
+                    "Konfirmasi Hapus",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
                 );
                 
                 if (confirm == JOptionPane.YES_OPTION) {
-                    hapusCatatan(e.getActionCommand()); // Menggunakan ID dari action command
-                    // Refresh tampilan setelah hapus
-                    SwingUtilities.invokeLater(this::tampilkanCatatan);
+                    hapusCatatan(card.getCardId());
                 }
             });
             
-            cards.add(card);
-        }
-        
-
-        
-        // Panel utama dengan grid 2 kolom
-        JPanel containerDinamis = new JPanel();
-        int rows = (int) Math.ceil(cards.size() / 2.0);
-        containerDinamis.setLayout(new GridLayout(rows, 2, 15, 15)); // 2 kolom, spasi 15px
-        
-        // Atur background putih dan hapus border
-        containerDinamis.setBackground(Color.WHITE);
-        containerDinamis.setBorder(null); // Menghilangkan border
-        
-        if (cardCatatan.getComponentCount() > 0) {
-            cardCatatan.removeAll();
-        }
-
-        cardCatatan.setLayout(new BorderLayout());
-        
-        for (CardCatatan card : cards) {
             containerDinamis.add(card);
         }
         
-        // JScrollPane juga bisa diatur backgroundnya
         JScrollPane scrollPane = new JScrollPane(containerDinamis);
-        scrollPane.setBorder(null); // Menghilangkan border scroll pane
-        scrollPane.getViewport().setBackground(Color.WHITE); // Background viewport putih
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(Color.WHITE);
         
+        cardCatatan.setLayout(new BorderLayout());
         cardCatatan.add(scrollPane, BorderLayout.CENTER);
         cardCatatan.revalidate();
         cardCatatan.repaint();
@@ -123,10 +114,7 @@ private void hapusCatatan(String idCatatan) {
     try (Connection conn = Koneksi.configDB();
          PreparedStatement pst = conn.prepareStatement(sql)) {
         
-        // Set parameter ID catatan yang akan dihapus
         pst.setString(1, idCatatan);
-        
-        // Eksekusi query
         int rowsAffected = pst.executeUpdate();
         
         if (rowsAffected > 0) {
@@ -135,56 +123,46 @@ private void hapusCatatan(String idCatatan) {
                 "Informasi", 
                 JOptionPane.INFORMATION_MESSAGE);
             
-            // Refresh tampilan setelah penghapusan
-            tampilkanCatatan();
+            // Refresh tampilan
+            tampilkanCatatanPJ();
         } else {
             JOptionPane.showMessageDialog(this, 
-                "Gagal menghapus catatan. Data tidak ditemukan.", 
+                "Gagal menghapus catatan", 
                 "Error", 
                 JOptionPane.ERROR_MESSAGE);
         }
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(this, 
-            "Error saat menghapus catatan: " + e.getMessage(), 
-            "Database Error", 
+            "Error database: " + e.getMessage(), 
+            "Error", 
             JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
     }
 }
-    
-    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        mainPanel = new com.mycompany.tindaklanjutku.custom.panelCustom();
-        sidebar = new com.mycompany.tindaklanjutku.custom.panelCustom();
+        panelCustom1 = new com.mycompany.tindaklanjutku.custom.panelCustom();
+        panelCustom2 = new com.mycompany.tindaklanjutku.custom.panelCustom();
         jLabel2 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
         dashboardItem = new javax.swing.JButton();
         pjItem = new javax.swing.JButton();
-        DivisiItem = new javax.swing.JButton();
         catatanKerjaItem = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
+        Logout = new javax.swing.JButton();
         tugasItem1 = new javax.swing.JButton();
         cardCatatan = new com.mycompany.tindaklanjutku.custom.panelCustom();
         roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        mainPanel.setBackground(new java.awt.Color(255, 255, 255));
-        mainPanel.setPreferredSize(new java.awt.Dimension(1111, 741));
-        mainPanel.setRoundBottomLeft(8);
-        mainPanel.setRoundBottomRight(8);
-        mainPanel.setRoundTopLeft(8);
-        mainPanel.setRoundTopRight(8);
+        panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
+        panelCustom1.setPreferredSize(new java.awt.Dimension(1111, 741));
 
-        sidebar.setBackground(new java.awt.Color(78, 75, 209));
-        sidebar.setMaximumSize(new java.awt.Dimension(253, 741));
-        sidebar.setMinimumSize(new java.awt.Dimension(253, 741));
-        sidebar.setPreferredSize(new java.awt.Dimension(253, 0));
-        sidebar.setRoundBottomLeft(8);
-        sidebar.setRoundTopLeft(8);
+        panelCustom2.setBackground(new java.awt.Color(78, 75, 209));
+        panelCustom2.setRoundBottomLeft(8);
+        panelCustom2.setRoundTopLeft(8);
 
         jLabel2.setFont(new java.awt.Font("Poppins", 1, 18)); // NOI18N
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
@@ -208,22 +186,11 @@ private void hapusCatatan(String idCatatan) {
         pjItem.setBackground(new java.awt.Color(78, 75, 209));
         pjItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         pjItem.setForeground(new java.awt.Color(255, 255, 255));
-        pjItem.setText("Daftar User");
+        pjItem.setText("Anggota");
         pjItem.setBorder(null);
         pjItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 pjItemActionPerformed(evt);
-            }
-        });
-
-        DivisiItem.setBackground(new java.awt.Color(78, 75, 209));
-        DivisiItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
-        DivisiItem.setForeground(new java.awt.Color(255, 255, 255));
-        DivisiItem.setText("Divisi");
-        DivisiItem.setBorder(null);
-        DivisiItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                DivisiItemActionPerformed(evt);
             }
         });
 
@@ -238,22 +205,22 @@ private void hapusCatatan(String idCatatan) {
             }
         });
 
-        jButton6.setBackground(new java.awt.Color(255, 51, 51));
-        jButton6.setFont(new java.awt.Font("Poppins", 1, 18)); // NOI18N
-        jButton6.setForeground(new java.awt.Color(255, 255, 255));
-        jButton6.setText("Logout");
-        jButton6.setBorder(null);
-        jButton6.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
+        Logout.setBackground(new java.awt.Color(255, 51, 51));
+        Logout.setFont(new java.awt.Font("Poppins", 1, 18)); // NOI18N
+        Logout.setForeground(new java.awt.Color(255, 255, 255));
+        Logout.setText("Logout");
+        Logout.setBorder(null);
+        Logout.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        Logout.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
+                LogoutActionPerformed(evt);
             }
         });
 
         tugasItem1.setBackground(new java.awt.Color(78, 75, 209));
         tugasItem1.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         tugasItem1.setForeground(new java.awt.Color(255, 255, 255));
-        tugasItem1.setText("Tugas");
+        tugasItem1.setText("Daftar Tugas");
         tugasItem1.setBorder(null);
         tugasItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -261,22 +228,21 @@ private void hapusCatatan(String idCatatan) {
             }
         });
 
-        javax.swing.GroupLayout sidebarLayout = new javax.swing.GroupLayout(sidebar);
-        sidebar.setLayout(sidebarLayout);
-        sidebarLayout.setHorizontalGroup(
-            sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout panelCustom2Layout = new javax.swing.GroupLayout(panelCustom2);
+        panelCustom2.setLayout(panelCustom2Layout);
+        panelCustom2Layout.setHorizontalGroup(
+            panelCustom2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
             .addComponent(dashboardItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(pjItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(DivisiItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(catatanKerjaItem, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jButton6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(Logout, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(tugasItem1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-        sidebarLayout.setVerticalGroup(
-            sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(sidebarLayout.createSequentialGroup()
+        panelCustom2Layout.setVerticalGroup(
+            panelCustom2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelCustom2Layout.createSequentialGroup()
                 .addGap(40, 40, 40)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -288,25 +254,22 @@ private void hapusCatatan(String idCatatan) {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(pjItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(DivisiItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(catatanKerjaItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 241, Short.MAX_VALUE)
-                .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 304, Short.MAX_VALUE)
+                .addComponent(Logout, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
-        cardCatatan.setBackground(new java.awt.Color(102, 102, 255));
-        cardCatatan.setPreferredSize(new java.awt.Dimension(1111, 421));
+        cardCatatan.setBackground(new java.awt.Color(78, 75, 209));
 
         javax.swing.GroupLayout cardCatatanLayout = new javax.swing.GroupLayout(cardCatatan);
         cardCatatan.setLayout(cardCatatanLayout);
         cardCatatanLayout.setHorizontalGroup(
             cardCatatanLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 805, Short.MAX_VALUE)
+            .addGap(0, 725, Short.MAX_VALUE)
         );
         cardCatatanLayout.setVerticalGroup(
             cardCatatanLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 645, Short.MAX_VALUE)
+            .addGap(0, 564, Short.MAX_VALUE)
         );
 
         roundedButton1.setBackground(new java.awt.Color(0, 204, 0));
@@ -319,26 +282,30 @@ private void hapusCatatan(String idCatatan) {
             }
         });
 
-        javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
-        mainPanel.setLayout(mainPanelLayout);
-        mainPanelLayout.setHorizontalGroup(
-            mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mainPanelLayout.createSequentialGroup()
-                .addComponent(sidebar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(30, 30, 30)
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(cardCatatan, javax.swing.GroupLayout.PREFERRED_SIZE, 805, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(23, Short.MAX_VALUE))
+        javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
+        panelCustom1.setLayout(panelCustom1Layout);
+        panelCustom1Layout.setHorizontalGroup(
+            panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelCustom1Layout.createSequentialGroup()
+                .addComponent(panelCustom2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelCustom1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(31, 31, 31))
+                    .addGroup(panelCustom1Layout.createSequentialGroup()
+                        .addGap(35, 35, 35)
+                        .addComponent(cardCatatan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(98, Short.MAX_VALUE))))
         );
-        mainPanelLayout.setVerticalGroup(
-            mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(sidebar, javax.swing.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE)
-            .addGroup(mainPanelLayout.createSequentialGroup()
-                .addGap(19, 19, 19)
-                .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(cardCatatan, javax.swing.GroupLayout.PREFERRED_SIZE, 645, javax.swing.GroupLayout.PREFERRED_SIZE)
+        panelCustom1Layout.setVerticalGroup(
+            panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(panelCustom2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelCustom1Layout.createSequentialGroup()
+                .addGap(25, 25, 25)
+                .addComponent(roundedButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cardCatatan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -347,84 +314,70 @@ private void hapusCatatan(String idCatatan) {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelCustom1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelCustom1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void dashboardItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardItemActionPerformed
+
+    }//GEN-LAST:event_dashboardItemActionPerformed
+
     private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
-        new MenambahkanRole(username).setVisible(true);
-        dispose();
+
     }//GEN-LAST:event_pjItemActionPerformed
 
-    private void DivisiItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DivisiItemActionPerformed
-        new uploadDivisi(username).setVisible(true);
-        dispose();
-    }//GEN-LAST:event_DivisiItemActionPerformed
-
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
-        new CatatanAdmin(username).setVisible(true);
-        dispose(); // Close current window after opening new one
+        new LogCatatan(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-                try {
-        // Show confirmation dialog
-        int confirm = JOptionPane.showConfirmDialog(
-            this, 
-            "Apakah Anda yakin ingin logout?", 
-            "Konfirmasi Logout", 
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
-        
-        if (confirm == JOptionPane.YES_OPTION) {
-            
-            // Close current window
-            this.dispose();
-            
-            // Open login form
-            java.awt.EventQueue.invokeLater(() -> {
-                new loginForm().setVisible(true);
-            });
-            
-        }
+    private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
+        try {
+            // Show confirmation dialog
+            int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Apakah Anda yakin ingin logout?",
+                "Konfirmasi Logout",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                // Close current window
+                this.dispose();
+
+                // Open login form
+                java.awt.EventQueue.invokeLater(() -> {
+                    new loginForm().setVisible(true);
+                });
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(
-                this, 
-                "Error saat logout: " + e.getMessage(), 
-                "Error", 
+                this,
+                "Error saat logout: " + e.getMessage(),
+                "Error",
                 JOptionPane.ERROR_MESSAGE
             );
             e.printStackTrace();
         }
-    }//GEN-LAST:event_jButton6ActionPerformed
-
-    private void dashboardItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardItemActionPerformed
-        new AdminDashboard(username).setVisible(true);
-        dispose();
-    }//GEN-LAST:event_dashboardItemActionPerformed
-
-    private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-        new UploadCatatan(username).setVisible(true);
-        dispose();
-    }//GEN-LAST:event_roundedButton1ActionPerformed
+    }//GEN-LAST:event_LogoutActionPerformed
 
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
-        try {
-            new tugas(username).setVisible(true);
-        } catch (SQLException ex) {
-            Logger.getLogger(CatatanAdmin.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
     }//GEN-LAST:event_tugasItem1ActionPerformed
+
+    private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
+        new uploadCatatan().setVisible(true);
+    }//GEN-LAST:event_roundedButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -443,38 +396,35 @@ private void hapusCatatan(String idCatatan) {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(CatatanAdmin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LogCatatan.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(CatatanAdmin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LogCatatan.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(CatatanAdmin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LogCatatan.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(CatatanAdmin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LogCatatan.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                // Ganti "admin" dengan username default atau ambil dari input jika perlu
-                new CatatanAdmin("admin").setVisible(true);
+                new LogCatatan("username_default").setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton DivisiItem;
+    private javax.swing.JButton Logout;
     private com.mycompany.tindaklanjutku.custom.panelCustom cardCatatan;
     private javax.swing.JButton catatanKerjaItem;
     private javax.swing.JButton dashboardItem;
-    private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JSeparator jSeparator1;
-    private com.mycompany.tindaklanjutku.custom.panelCustom mainPanel;
+    private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom1;
+    private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
     private javax.swing.JButton pjItem;
     private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton1;
-    private com.mycompany.tindaklanjutku.custom.panelCustom sidebar;
     private javax.swing.JButton tugasItem1;
     // End of variables declaration//GEN-END:variables
 }

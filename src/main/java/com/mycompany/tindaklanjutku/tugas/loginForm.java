@@ -7,6 +7,8 @@ import Anggota.AnggotaDashboard;
 import PJ.PJDashboard;
 import admin.AdminDashboard;
 import admin.CatatanAdmin;
+import auth.AuthService;
+import auth.SessionManager;
 import com.mycompany.tindaklanjutku.Koneksi;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -46,120 +48,46 @@ public class loginForm extends javax.swing.JFrame {
     });   
     }
     
-    public static class SessionManager {
-    private static SessionManager instance;
-    private int userId;
-    private String username;
-    private String role;
-
-    private SessionManager() {}
-
-    public static SessionManager getInstance() {
-        if (instance == null) {
-            instance = new SessionManager();
-        }
-        return instance;
-    }
-
-    public void startSession(int userId, String username, String role) {
-        this.userId = userId;
-        this.username = username;
-        this.role = role;
-    }
-
-    public void endSession() {
-        this.userId = 0;
-        this.username = null;
-        this.role = null;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public boolean isLoggedIn() {
-        return username != null;
-    }
-}
-    
-    
-    
-    
-    
     private void loginAction() {
-    String username = usnField.getText();
-    String password = new String(pwField.getPassword());
+            String username = usnField.getText();
+        String password = new String(pwField.getPassword());
 
-    if(username.isEmpty() || password.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Username dan password tidak boleh kosong!");
-        return;
-    }
-
-    try {
-        Connection conn = Koneksi.configDB();
-        String sql = "SELECT id_usr, namaUsr, pw, role FROM user WHERE namaUsr = ?";
-        
-        try (PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setString(1, username);
-            
-            try (ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    String hashedPassword = rs.getString("pw");
-
-                    
-                    
-                    if (BCrypt.checkpw(password, hashedPassword)) {
-                        // Start session
-                        SessionManager session = SessionManager.getInstance();
-                        session.startSession(
-                            rs.getInt("id_usr"),
-                            username,
-                            rs.getString("role")
-                        );
-                        
-                        // Redirect based on role
-                        redirectBasedOnRole(session.getRole());
-                        dispose();
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Password salah!");
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "Username tidak ditemukan!");
-                }
-            }
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Username dan password tidak boleh kosong!");
+            return;
         }
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
-    }
+
+        try {
+            if (AuthService.authenticate(username, password)) {
+                redirectBasedOnRole();
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Username/password salah!");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
 }
-    private void redirectBasedOnRole(String role) {
-    String username = SessionManager.getInstance().getUsername();
-    switch (role.toLowerCase()) {
-        case "admin":
-            AdminDashboard adminDashboard = new AdminDashboard(SessionManager.getInstance().getUsername());
-            adminDashboard.setVisible(true);
-            // Jika ingin membuka CatatanAdmin dari AdminDashboard, 
-            // lakukan dari dalam AdminDashboard, bukan di sini.
-            break;
-        case "pj":
-            new PJDashboard().setVisible(true);
-            break;
-        case "anggota":
-            new AnggotaDashboard().setVisible(true);
-            break;
-        default:
-            JOptionPane.showMessageDialog(this, "Role tidak valid!");
-            new loginForm().setVisible(true);
+    
+    
+    private void redirectBasedOnRole() {
+        SessionManager session = SessionManager.getInstance();
+        switch (session.getRole().toLowerCase()) {
+            case "admin":
+                new AdminDashboard(session.getUsername()).setVisible(true);
+                break;
+            case "pj":
+                new PJDashboard(session.getUsername(), session.getIdPJ()).setVisible(true);
+                break;
+            case "anggota":
+                new AnggotaDashboard(session.getUsername()).setVisible(true);
+                break;
+            default:
+                JOptionPane.showMessageDialog(this, "Role tidak valid!");
+                new loginForm().setVisible(true);
+        }
     }
-}
+
 
     /**
      * This method is called from within the constructor to initialize the form.
