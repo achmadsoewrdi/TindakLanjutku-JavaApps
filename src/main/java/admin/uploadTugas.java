@@ -1,180 +1,189 @@
-    /*
+/*
     * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
     * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
-    */
-    package admin;
+ */
+package admin;
+
 import admin.tugas;
-    import com.mycompany.tindaklanjutku.Koneksi;
+import com.mycompany.tindaklanjutku.Koneksi;
 import com.mycompany.tindaklanjutku.tugas.loginForm;
-    import com.toedter.calendar.JDateChooser;
-    import java.awt.*;
-    import java.awt.event.*;
-    import java.sql.*;
-    import java.text.SimpleDateFormat;
-    import java.util.*;
-    import java.sql.Connection;
+import com.toedter.calendar.JDateChooser;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-    import javax.swing.DefaultComboBoxModel;
-    import javax.swing.JOptionPane;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
 
-    /**
-     *
-     * @author ASUS VIVO
-     */
-    public class uploadTugas extends javax.swing.JFrame {
+/**
+ *
+ * @author ASUS VIVO
+ */
+public class uploadTugas extends javax.swing.JFrame {
 
-        private String username;
-        public uploadTugas(String username) {
-            this.username = username;
-            initComponents();
-            loadPJ();
-        }
+    private String username;
 
-        
-        class pjItem{
-            private int id;
-            private String nama;
-            
-            public pjItem(int id, String nama){
-                this.id = id;
-                this.nama = nama;
-            }
-            
-            public int getId(){
-                return id;
-            }
-            
-            @Override
-            public String toString(){
-                return nama;
-            }
-        }
-        
-        
-        
-        
-        private void loadPJ(){
-            try {
-                Connection conn = Koneksi.configDB();
-                String sql = "SELECT pj.id_pj, u.namaUsr " +
-                        "FROM penanggung_jawab pj " +
-                        "JOIN user u ON pj.id_user = u.Id_usr";
-                PreparedStatement pst = conn.prepareStatement(sql);
-                ResultSet rs = pst.executeQuery();
-                
-                DefaultComboBoxModel model = new DefaultComboBoxModel();
-                model.addElement("Pilih Penanggung Jawab");
-                
-                while (rs.next()) {
-                    int idPj = rs.getInt("id_pj");
-                    String nama = rs.getString("namaUsr");
-                    model.addElement(new pjItem(idPj, nama)); // Tambah item ke combo box
-                }
-                
-                comboBoxPJ.setModel(model);
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Gagal memuat Penanggung Jawab");
-            }
-                
-        }
-        
-        private void uTugas() {
-    String namaTugas = judul.getText().trim();
-    String desk = deskripsi.getText().trim();
-    java.util.Date tanggal = date.getDate();
-    String kategoriStr = kategori1.getText().trim();
-
-    // Validasi input
-    if (namaTugas.isEmpty() || desk.isEmpty() || tanggal == null || kategoriStr.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
-        return;
+    public uploadTugas(String username) {
+        this.username = username;
+        initComponents();
+        loadPJ();
     }
 
-    if (comboBoxPJ.getSelectedIndex() <= 0) {
-        JOptionPane.showMessageDialog(this, "Pilih Penanggung Jawab!");
-        return;
+    class pjItem {
+
+        private int id;
+        private String nama;
+
+        public pjItem(int id, String nama) {
+            this.id = id;
+            this.nama = nama;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return nama;
+        }
     }
 
-    try {
-        java.sql.Date sqlDeadline = new java.sql.Date(tanggal.getTime());
-        pjItem selectedPJ = (pjItem) comboBoxPJ.getSelectedItem();
+    private void loadPJ() {
+        try {
+            Connection conn = Koneksi.configDB();
+            String sql = "SELECT pj.id_pj, u.namaUsr "
+                    + "FROM penanggung_jawab pj "
+                    + "JOIN user u ON pj.id_user = u.Id_usr";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            ResultSet rs = pst.executeQuery();
 
-        try (Connection conn = Koneksi.configDB()) {
-            conn.setAutoCommit(false); // mulai transaksi
+            DefaultComboBoxModel model = new DefaultComboBoxModel();
+            model.addElement("Pilih Penanggung Jawab");
 
-            // 1. Cek apakah kategori sudah ada
-            String cekKategori = "SELECT id_kategori FROM kategori WHERE nama_kategori = ?";
-            PreparedStatement pstCek = conn.prepareStatement(cekKategori);
-            pstCek.setString(1, kategoriStr);
-            ResultSet rs = pstCek.executeQuery();
+            while (rs.next()) {
+                int idPj = rs.getInt("id_pj");
+                String nama = rs.getString("namaUsr");
+                model.addElement(new pjItem(idPj, nama)); // Tambah item ke combo box
+            }
 
-            int idKategori;
-            if (rs.next()) {
-                // kategori sudah ada
-                idKategori = rs.getInt("id_kategori");
-            } else {
-                // kategori belum ada, insert baru
-                String insertKategori = "INSERT INTO kategori (nama_kategori) VALUES (?)";
-                PreparedStatement pstInsertKat = conn.prepareStatement(insertKategori, Statement.RETURN_GENERATED_KEYS);
-                pstInsertKat.setString(1, kategoriStr);
-                pstInsertKat.executeUpdate();
+            comboBoxPJ.setModel(model);
 
-                ResultSet rsKeys = pstInsertKat.getGeneratedKeys();
-                if (rsKeys.next()) {
-                    idKategori = rsKeys.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Gagal memuat Penanggung Jawab");
+        }
+
+    }
+
+    private void uTugas() throws SQLException {
+        String namaTugas = judul.getText().trim();
+        String desk = deskripsi.getText().trim();
+        java.util.Date tanggal = date.getDate();
+        String kategoriStr = kategori1.getText().trim();
+
+        Connection conn = Koneksi.configDB();
+        String namaPjDipilih = comboBoxPJ.getSelectedItem().toString();
+        String sqlIdUser = "SELECT * FROM user WHERE namaUsr = ?";
+        PreparedStatement pstIDUSER = conn.prepareStatement(sqlIdUser);
+        pstIDUSER.setString(1, namaPjDipilih);
+        ResultSet rsIDUSER = pstIDUSER.executeQuery();
+
+        Integer idUser = null;
+        if (rsIDUSER.next()) {
+            idUser = rsIDUSER.getInt("id_usr");
+        } else {
+            JOptionPane.showMessageDialog(this, "User tidak ditemukan!");
+            return;
+        }
+
+        // Validasi input
+        if (namaTugas.isEmpty() || desk.isEmpty() || tanggal == null || kategoriStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
+            return;
+        }
+
+        if (comboBoxPJ.getSelectedIndex() <= 0) {
+            JOptionPane.showMessageDialog(this, "Pilih Penanggung Jawab!");
+            return;
+        }
+
+        try {
+            java.sql.Date sqlDeadline = new java.sql.Date(tanggal.getTime());
+            pjItem selectedPJ = (pjItem) comboBoxPJ.getSelectedItem();
+
+            try (conn) {
+                conn.setAutoCommit(false); // mulai transaksi
+
+                // 1. Cek apakah kategori sudah ada
+                String cekKategori = "SELECT id_kategori FROM kategori WHERE nama_kategori = ?";
+                PreparedStatement pstCek = conn.prepareStatement(cekKategori);
+                pstCek.setString(1, kategoriStr);
+                ResultSet rs = pstCek.executeQuery();
+
+                int idKategori;
+                if (rs.next()) {
+                    // kategori sudah ada
+                    idKategori = rs.getInt("id_kategori");
                 } else {
-                    throw new SQLException("Gagal mendapatkan ID kategori baru.");
+                    // kategori belum ada, insert baru
+                    String insertKategori = "INSERT INTO kategori (nama_kategori) VALUES (?)";
+                    PreparedStatement pstInsertKat = conn.prepareStatement(insertKategori, Statement.RETURN_GENERATED_KEYS);
+                    pstInsertKat.setString(1, kategoriStr);
+                    pstInsertKat.executeUpdate();
+
+                    ResultSet rsKeys = pstInsertKat.getGeneratedKeys();
+                    if (rsKeys.next()) {
+                        idKategori = rsKeys.getInt(1);
+                    } else {
+                        throw new SQLException("Gagal mendapatkan ID kategori baru.");
+                    }
                 }
+
+                // 2. Insert tugas menggunakan idKategori
+                String insertTugas = "INSERT INTO tugas (judul, deskripsi, deadline, id_pj, id_kategori, id_user) VALUES (?, ?, ?, ?, ?, ?)";
+                PreparedStatement pst = conn.prepareStatement(insertTugas);
+                pst.setString(1, namaTugas);
+                pst.setString(2, desk);
+                pst.setDate(3, sqlDeadline);
+                pst.setInt(4, selectedPJ.getId());
+                pst.setInt(5, idKategori);
+                pst.setInt(6, idUser);
+                pst.executeUpdate();
+
+                conn.commit(); // simpan transaksi
+
+                JOptionPane.showMessageDialog(this, "Tugas berhasil diunggah!");
+                // Reset form
+                judul.setText("");
+                deskripsi.setText("");
+                date.setDate(null);
+                comboBoxPJ.setSelectedIndex(0);
+                kategori1.setText("");
+                new tugas(username).setVisible(true);
+                dispose();
+
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Gagal menyimpan tugas: " + e.getMessage());
+                e.printStackTrace();
             }
 
-            // 2. Insert tugas menggunakan idKategori
-            String insertTugas = "INSERT INTO tugas (judul, deskripsi, deadline, id_pj, id_kategori) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement pst = conn.prepareStatement(insertTugas);
-            pst.setString(1, namaTugas);
-            pst.setString(2, desk);
-            pst.setDate(3, sqlDeadline);
-            pst.setInt(4, selectedPJ.getId());
-            pst.setInt(5, idKategori);
-            pst.executeUpdate();
-
-            conn.commit(); // simpan transaksi
-
-            JOptionPane.showMessageDialog(this, "Tugas berhasil diunggah!");
-            // Reset form
-            judul.setText("");
-            deskripsi.setText("");
-            date.setDate(null);
-            comboBoxPJ.setSelectedIndex(0);
-            kategori1.setText("");
-            new tugas(username).setVisible(true);
-            dispose();
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Gagal menyimpan tugas: " + e.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
             e.printStackTrace();
         }
-
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
-        e.printStackTrace();
     }
-}
 
-
-
-        
-        
-        
-
-        /**
-         * This method is called from within the constructor to initialize the form.
-         * WARNING: Do NOT modify this code. The content of this method is always
-         * regenerated by the Form Editor.
-         */
-        @SuppressWarnings("unchecked")
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -204,6 +213,7 @@ import java.util.logging.Logger;
         kategori1 = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Upload Tugas");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -371,6 +381,11 @@ import java.util.logging.Logger;
         comboBoxPJ.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         comboBoxPJ.setForeground(new java.awt.Color(51, 51, 51));
         comboBoxPJ.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4", "item 5", " " }));
+        comboBoxPJ.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboBoxPJActionPerformed(evt);
+            }
+        });
 
         deskripsi.setBackground(new java.awt.Color(255, 255, 255));
         deskripsi.setForeground(new java.awt.Color(51, 51, 51));
@@ -476,40 +491,44 @@ import java.util.logging.Logger;
     }// </editor-fold>//GEN-END:initComponents
 
         private void roundedButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roundedButton1ActionPerformed
-            uTugas();
+            try {
+                uTugas();
+            } catch (SQLException ex) {
+                Logger.getLogger(uploadTugas.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }//GEN-LAST:event_roundedButton1ActionPerformed
 
         private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
             try {
-        // Show confirmation dialog
-        int confirm = JOptionPane.showConfirmDialog(
-            this, 
-            "Apakah Anda yakin ingin logout?", 
-            "Konfirmasi Logout", 
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
-        
-        if (confirm == JOptionPane.YES_OPTION) {
-            
-            // Close current window
-            this.dispose();
-            
-            // Open login form
-            java.awt.EventQueue.invokeLater(() -> {
-                new loginForm().setVisible(true);
-            });
-            
-        }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(
-                this, 
-                "Error saat logout: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE
-            );
-            e.printStackTrace();
-        }
+                // Show confirmation dialog
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Apakah Anda yakin ingin logout?",
+                        "Konfirmasi Logout",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                );
+
+                if (confirm == JOptionPane.YES_OPTION) {
+
+                    // Close current window
+                    this.dispose();
+
+                    // Open login form
+                    java.awt.EventQueue.invokeLater(() -> {
+                        new loginForm().setVisible(true);
+                    });
+
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error saat logout: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                e.printStackTrace();
+            }
         }//GEN-LAST:event_jButton6ActionPerformed
 
     private void dashboarItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboarItemActionPerformed
@@ -518,11 +537,11 @@ import java.util.logging.Logger;
     }//GEN-LAST:event_dashboarItemActionPerformed
 
     private void tugasItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItemActionPerformed
-            try {
-                new tugas(username).setVisible(true);
-            } catch (SQLException ex) {
-                Logger.getLogger(uploadTugas.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        try {
+            new tugas(username).setVisible(true);
+        } catch (SQLException ex) {
+            Logger.getLogger(uploadTugas.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_tugasItemActionPerformed
 
     private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
@@ -540,40 +559,44 @@ import java.util.logging.Logger;
         dispose();
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
-        /**
-         * @param args the command line arguments
-         */
-        public static void main(String args[]) {
-            /* Set the Nimbus look and feel */
-            //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-            /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-            * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-            */
-            try {
-                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                    if ("Nimbus".equals(info.getName())) {
-                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                        break;
-                    }
-                }
-            } catch (ClassNotFoundException ex) {
-                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            } catch (InstantiationException ex) {
-                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-                java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            }
-            //</editor-fold>
+    private void comboBoxPJActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboBoxPJActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_comboBoxPJActionPerformed
 
-            /* Create and display the form */
-            java.awt.EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    new uploadTugas("admin").setVisible(true);
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+            * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
                 }
-            });
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(uploadTugas.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new uploadTugas("admin").setVisible(true);
+            }
+        });
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton catatanKerjaItem;
@@ -601,4 +624,4 @@ import java.util.logging.Logger;
     private com.mycompany.tindaklanjutku.custom.RoundedButton roundedButton1;
     private javax.swing.JButton tugasItem;
     // End of variables declaration//GEN-END:variables
-    }
+}

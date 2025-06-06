@@ -20,16 +20,16 @@ import javax.swing.JOptionPane;
  */
 public class AdminDashboard extends javax.swing.JFrame {
 
-    private String username; 
+    private String username;
     private String role;
-    
+
     public AdminDashboard(String username) {
         initComponents();
         this.username = username;
         loadUserData();
         loadTaskCounts();
     }
-    
+
     private void loadUserData() {
         try (Connection con = Koneksi.configDB()) {
             String sql = "SELECT namaUsr, role FROM user WHERE namaUsr = ?";
@@ -39,7 +39,7 @@ public class AdminDashboard extends javax.swing.JFrame {
                     if (rs.next()) {
                         // Tampilkan nama user
                         namaAdmin.setText(rs.getString("namaUsr"));
-                        
+
                         // Simpan role
                         this.role = rs.getString("role");
                     }
@@ -50,13 +50,12 @@ public class AdminDashboard extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
-    
+
     private void loadTaskCounts() {
         try (Connection con = Koneksi.configDB()) {
             // Hitung tugas selesai
             String sqlSelesai = "SELECT COUNT(*) FROM tugas WHERE status = 'selesai'";
-            try (PreparedStatement ps = con.prepareStatement(sqlSelesai);
-                 ResultSet rs = ps.executeQuery()) {
+            try (PreparedStatement ps = con.prepareStatement(sqlSelesai); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     totalSelesai.setText(String.valueOf(rs.getInt(1)));
                 }
@@ -64,8 +63,7 @@ public class AdminDashboard extends javax.swing.JFrame {
 
             // Hitung tugas progress
             String sqlProgress = "SELECT COUNT(*) FROM tugas WHERE status = 'progres'";
-            try (PreparedStatement ps = con.prepareStatement(sqlProgress);
-                 ResultSet rs = ps.executeQuery()) {
+            try (PreparedStatement ps = con.prepareStatement(sqlProgress); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     totalProgress.setText(String.valueOf(rs.getInt(1)));
                 }
@@ -73,8 +71,7 @@ public class AdminDashboard extends javax.swing.JFrame {
 
             // Hitung tugas belum dimulai
             String sqlBelumDimulai = "SELECT COUNT(*) FROM tugas WHERE status = 'belum'";
-            try (PreparedStatement ps = con.prepareStatement(sqlBelumDimulai);
-                 ResultSet rs = ps.executeQuery()) {
+            try (PreparedStatement ps = con.prepareStatement(sqlBelumDimulai); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     totalBelumdimulai.setText(String.valueOf(rs.getInt(1)));
                 }
@@ -82,8 +79,7 @@ public class AdminDashboard extends javax.swing.JFrame {
 
             // Hitung total divisi
             String sqlDivisi = "SELECT COUNT(*) FROM divisi";
-            try (PreparedStatement ps = con.prepareStatement(sqlDivisi);
-                 ResultSet rs = ps.executeQuery()) {
+            try (PreparedStatement ps = con.prepareStatement(sqlDivisi); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     totalDivisi.setText(String.valueOf(rs.getInt(1)));
                 }
@@ -93,10 +89,6 @@ public class AdminDashboard extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
-
-    
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -138,6 +130,7 @@ public class AdminDashboard extends javax.swing.JFrame {
         jLabel15 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Dashboard Admin");
         setPreferredSize(new java.awt.Dimension(1111, 741));
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
@@ -548,32 +541,33 @@ public class AdminDashboard extends javax.swing.JFrame {
 
     private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
         try {
-        // Show confirmation dialog
-        int confirm = JOptionPane.showConfirmDialog(
-            this, 
-            "Apakah Anda yakin ingin logout?", 
-            "Konfirmasi Logout", 
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
-        
-        if (confirm == JOptionPane.YES_OPTION) {
-            
-            // Close current window
-            this.dispose();
-            
-            // Open login form
-            java.awt.EventQueue.invokeLater(() -> {
-                new loginForm().setVisible(true);
-            });
-            
-        }
+            // Show confirmation dialog
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Apakah Anda yakin ingin logout?",
+                    "Konfirmasi Logout",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+
+                // Close current window
+                this.dispose();
+
+                // Open login form
+                java.awt.EventQueue.invokeLater(() -> {
+                    new loginForm().setVisible(true);
+                    dispose();
+                });
+
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(
-                this, 
-                "Error saat logout: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE
+                    this,
+                    "Error saat logout: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
             );
             e.printStackTrace();
         }
@@ -597,6 +591,7 @@ public class AdminDashboard extends javax.swing.JFrame {
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
         try {
             new tugas(username).setVisible(true);
+            dispose();
         } catch (SQLException ex) {
             Logger.getLogger(AdminDashboard.class.getName()).log(Level.SEVERE, null, ex);
         }

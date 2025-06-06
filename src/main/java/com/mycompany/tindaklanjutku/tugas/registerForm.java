@@ -156,6 +156,7 @@ private void loadDivisi() {
         jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Register");
 
         panelCustom1.setBackground(new java.awt.Color(78, 75, 209));
         panelCustom1.setToolTipText("Register");

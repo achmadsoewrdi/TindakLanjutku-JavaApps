@@ -156,6 +156,7 @@ private void loadTugasFromDatabase() {
         kirim = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Upload Catatan");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setPreferredSize(new java.awt.Dimension(690, 690));

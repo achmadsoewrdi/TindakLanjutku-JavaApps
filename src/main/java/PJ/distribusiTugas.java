@@ -26,6 +26,7 @@ public class distribusiTugas extends javax.swing.JFrame {
     private Integer idPJ;
     private String username;
     private Connection connection;
+
     public distribusiTugas(Integer idPJ) throws SQLException {
         try {
             this.username = SessionManager.getInstance().getUsername();
@@ -41,26 +42,26 @@ public class distribusiTugas extends javax.swing.JFrame {
             Logger.getLogger(distribusiTugas.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-private void loadNamaComboBox() {
+
+    private void loadNamaComboBox() {
         try {
             // Query untuk mengambil nama user yang satu divisi dengan PJ
-            String query = "SELECT u.namaUsr FROM user u " +
-                         "JOIN penanggung_jawab pj ON u.id_divisi = pj.id_divisi " +
-                         "WHERE pj.id_pj = ? AND u.Id_usr != pj.id_user";
-            
+            String query = "SELECT u.namaUsr FROM user u "
+                    + "JOIN penanggung_jawab pj ON u.id_divisi = pj.id_divisi "
+                    + "WHERE pj.id_pj = ? AND u.Id_usr != pj.id_user";
+
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setInt(1, idPJ);
-            
+
             ResultSet rs = stmt.executeQuery();
-            
+
             List<String> namaList = new ArrayList<>();
             while (rs.next()) {
                 namaList.add(rs.getString("namaUsr"));
             }
-            
+
             comboNama.setModel(new javax.swing.DefaultComboBoxModel<>(namaList.toArray(new String[0])));
-            
+
             if (namaList.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Tidak ada anggota dalam divisi Anda", "Informasi", JOptionPane.INFORMATION_MESSAGE);
                 try {
@@ -68,61 +69,58 @@ private void loadNamaComboBox() {
                 } catch (SQLException ex) {
                     Logger.getLogger(distribusiTugas.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
             }
-            
+
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Gagal memuat daftar nama: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-
-public static boolean hasAvailableTugas(int idPJ) {
-    try (Connection conn = Koneksi.configDB();
-         PreparedStatement stmt = conn.prepareStatement(
-            "SELECT 1 FROM tugas t " +
-            "WHERE t.id_pj = ? AND t.id_tugas NOT IN (SELECT id_tugas FROM tugas_user) LIMIT 1"
-         )) {
-        stmt.setInt(1, idPJ);
-        ResultSet rs = stmt.executeQuery();
-        return rs.next(); // True kalau masih ada tugas yang belum didistribusikan
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false; // Anggap tidak tersedia kalau error
+    public static boolean hasAvailableTugas(int idPJ) {
+        try (Connection conn = Koneksi.configDB(); PreparedStatement stmt = conn.prepareStatement(
+                "SELECT 1 FROM tugas t "
+                + "WHERE t.id_pj = ? AND t.id_tugas NOT IN (SELECT id_tugas FROM tugas_user) LIMIT 1"
+        )) {
+            stmt.setInt(1, idPJ);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next(); // True kalau masih ada tugas yang belum didistribusikan
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // Anggap tidak tersedia kalau error
+        }
     }
-}
 
-    
     private void loadTugasComboBox() {
         try {
             if (comboNama.getSelectedItem() == null) {
                 return;
             }
-            
+
             // Query untuk mengambil tugas yang dibuat oleh PJ ini dan belum didistribusikan
-            String query = "SELECT t.judul FROM tugas t " +
-                          "WHERE t.id_pj = ? AND t.id_tugas NOT IN " +
-                          "(SELECT id_tugas FROM tugas_user)";
-            
+            String query = "SELECT t.judul FROM tugas t "
+                    + "WHERE t.id_pj = ? AND t.id_tugas NOT IN "
+                    + "(SELECT id_tugas FROM tugas_user)";
+
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setInt(1, idPJ);
-            
+
             ResultSet rs = stmt.executeQuery();
-            
+
             List<String> tugasList = new ArrayList<>();
             while (rs.next()) {
                 tugasList.add(rs.getString("judul"));
             }
-            
+
             comboTugas1.setModel(new javax.swing.DefaultComboBoxModel<>(tugasList.toArray(new String[0])));
-            
+
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Gagal memuat daftar tugas: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -138,6 +136,7 @@ public static boolean hasAvailableTugas(int idPJ) {
         roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Distribusi Tugas");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setRoundBottomLeft(8);
@@ -167,6 +166,11 @@ public static boolean hasAvailableTugas(int idPJ) {
         comboNama.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
         comboNama.setForeground(new java.awt.Color(102, 102, 255));
         comboNama.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        comboNama.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboNamaActionPerformed(evt);
+            }
+        });
 
         SaveD.setBackground(new java.awt.Color(102, 102, 255));
         SaveD.setText("Simpan");
@@ -272,66 +276,66 @@ public static boolean hasAvailableTugas(int idPJ) {
 
     private void SaveDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveDActionPerformed
         // Validasi pilihan
-    if (comboNama.getSelectedItem() == null || comboTugas1.getSelectedItem() == null) {
-        JOptionPane.showMessageDialog(this, "Harap pilih nama dan tugas terlebih dahulu", "Peringatan", JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-
-    String selectedNama = comboNama.getSelectedItem().toString();
-    String selectedTugas = comboTugas1.getSelectedItem().toString();
-
-    try {
-        // 1. Dapatkan ID user berdasarkan nama
-        String getUserQuery = "SELECT id_usr FROM user WHERE namaUsr = ?";
-        PreparedStatement getUserStmt = connection.prepareStatement(getUserQuery);
-        getUserStmt.setString(1, selectedNama);
-        ResultSet userRs = getUserStmt.executeQuery();
-
-        // 2. Dapatkan ID tugas berdasarkan judul
-        String getTugasQuery = "SELECT id_tugas FROM tugas WHERE judul = ? AND id_pj = ?";
-        PreparedStatement getTugasStmt = connection.prepareStatement(getTugasQuery);
-        getTugasStmt.setString(1, selectedTugas);
-        getTugasStmt.setInt(2, idPJ);
-        ResultSet tugasRs = getTugasStmt.executeQuery();
-
-        if (userRs.next() && tugasRs.next()) {
-            int userId = userRs.getInt("id_usr");
-            int tugasId = tugasRs.getInt("id_tugas");
-
-            // 3. Cek apakah tugas sudah pernah didistribusikan ke user ini
-            String checkQuery = "SELECT COUNT(*) FROM tugas_user WHERE id_user = ? AND id_tugas = ?";
-            PreparedStatement checkStmt = connection.prepareStatement(checkQuery);
-            checkStmt.setInt(1, userId);
-            checkStmt.setInt(2, tugasId);
-            ResultSet checkRs = checkStmt.executeQuery();
-
-            if (checkRs.next() && checkRs.getInt(1) > 0) {
-                JOptionPane.showMessageDialog(this, "Tugas ini sudah didistribusikan ke user tersebut", "Peringatan", JOptionPane.WARNING_MESSAGE);
-                loadTugasComboBox();
-            }
-
-            // 4. Simpan distribusi tugas
-            String insertQuery = "INSERT INTO tugas_user (id_user, id_tugas) VALUES (?, ?)";
-            PreparedStatement insertStmt = connection.prepareStatement(insertQuery);
-            insertStmt.setInt(1, userId);
-            insertStmt.setInt(2, tugasId);
-
-            int rowsAffected = insertStmt.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(this, "Tugas berhasil didistribusikan", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                // Refresh daftar tugas setelah berhasil disimpan
-                loadTugasComboBox();
-            } else {
-                JOptionPane.showMessageDialog(this, "Gagal mendistribusikan tugas", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Data user atau tugas tidak ditemukan", "Error", JOptionPane.ERROR_MESSAGE);
+        if (comboNama.getSelectedItem() == null || comboTugas1.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Harap pilih nama dan tugas terlebih dahulu", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Terjadi kesalahan database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-    }
+
+        String selectedNama = comboNama.getSelectedItem().toString();
+        String selectedTugas = comboTugas1.getSelectedItem().toString();
+
+        try {
+            // 1. Dapatkan ID user berdasarkan nama
+            String getUserQuery = "SELECT id_usr FROM user WHERE namaUsr = ?";
+            PreparedStatement getUserStmt = connection.prepareStatement(getUserQuery);
+            getUserStmt.setString(1, selectedNama);
+            ResultSet userRs = getUserStmt.executeQuery();
+
+            // 2. Dapatkan ID tugas berdasarkan judul
+            String getTugasQuery = "SELECT id_tugas FROM tugas WHERE judul = ? AND id_pj = ?";
+            PreparedStatement getTugasStmt = connection.prepareStatement(getTugasQuery);
+            getTugasStmt.setString(1, selectedTugas);
+            getTugasStmt.setInt(2, idPJ);
+            ResultSet tugasRs = getTugasStmt.executeQuery();
+
+            if (userRs.next() && tugasRs.next()) {
+                int userId = userRs.getInt("id_usr");
+                int tugasId = tugasRs.getInt("id_tugas");
+
+                // 3. Cek apakah tugas sudah pernah didistribusikan ke user ini
+                String checkQuery = "SELECT COUNT(*) FROM tugas_user WHERE id_user = ? AND id_tugas = ?";
+                PreparedStatement checkStmt = connection.prepareStatement(checkQuery);
+                checkStmt.setInt(1, userId);
+                checkStmt.setInt(2, tugasId);
+                ResultSet checkRs = checkStmt.executeQuery();
+
+                if (checkRs.next() && checkRs.getInt(1) > 0) {
+                    JOptionPane.showMessageDialog(this, "Tugas ini sudah didistribusikan ke user tersebut", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                    loadTugasComboBox();
+                }
+
+                // 4. Simpan distribusi tugas
+                String insertQuery = "INSERT INTO tugas_user (id_user, id_tugas) VALUES (?, ?)";
+                PreparedStatement insertStmt = connection.prepareStatement(insertQuery);
+                insertStmt.setInt(1, userId);
+                insertStmt.setInt(2, tugasId);
+
+                int rowsAffected = insertStmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(this, "Tugas berhasil didistribusikan", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                    // Refresh daftar tugas setelah berhasil disimpan
+                    loadTugasComboBox();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Gagal mendistribusikan tugas", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Data user atau tugas tidak ditemukan", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
 
     }//GEN-LAST:event_SaveDActionPerformed
 
@@ -339,6 +343,10 @@ public static boolean hasAvailableTugas(int idPJ) {
         new daftarTugas(idPJ, username).setVisible(true);
         dispose();
     }//GEN-LAST:event_roundedButton1ActionPerformed
+
+    private void comboNamaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboNamaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_comboNamaActionPerformed
 
     /**
      * @param args the command line arguments

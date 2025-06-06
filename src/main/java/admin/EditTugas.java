@@ -81,6 +81,7 @@
         kategori1 = new com.mycompany.tindaklanjutku.custom.RoundedTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Edit Tugas Admin");
 
         panelCustom1.setBackground(new java.awt.Color(78, 75, 209));
         panelCustom1.setRoundBottomLeft(8);

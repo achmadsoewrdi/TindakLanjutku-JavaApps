@@ -278,6 +278,7 @@ private void deleteTask(int taskId) {
         roundedButton3 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Tugas Admin");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setRoundBottomLeft(8);
@@ -532,6 +533,7 @@ private void deleteTask(int taskId) {
             // Open login form
             java.awt.EventQueue.invokeLater(() -> {
                 new loginForm().setVisible(true);
+                dispose();
             });
             
         }

@@ -1,5 +1,6 @@
 package PJ;
 
+import auth.SessionManager;
 import com.mycompany.tindaklanjutku.Koneksi;
 import com.mycompany.tindaklanjutku.tugas.loginForm;
 import java.sql.Connection;
@@ -14,8 +15,10 @@ import javax.swing.table.TableColumnModel;
 public class Anggota extends javax.swing.JFrame {
 
     private String username;
+    private Integer idPJ;
 
     public Anggota(String username) {
+        this.idPJ = SessionManager.getInstance().getIdPJ();
         this.username = username;
         initComponents();
         loadAnggotaData();
@@ -94,6 +97,7 @@ public class Anggota extends javax.swing.JFrame {
         anggota = new com.mycompany.tindaklanjutku.custom.CustomTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Daftar Anggota");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setPreferredSize(new java.awt.Dimension(1111, 741));
@@ -118,6 +122,7 @@ public class Anggota extends javax.swing.JFrame {
         dashboardItem.setFont(new java.awt.Font("Poppins", 1, 14)); // NOI18N
         dashboardItem.setForeground(new java.awt.Color(255, 255, 255));
         dashboardItem.setText("Dashboard");
+        dashboardItem.setToolTipText("");
         dashboardItem.setBorder(null);
         dashboardItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -263,15 +268,18 @@ public class Anggota extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void dashboardItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardItemActionPerformed
-
+        new PJDashboard(username,idPJ).setVisible(true);
+        dispose();
     }//GEN-LAST:event_dashboardItemActionPerformed
 
     private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
-
+        new Anggota(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_pjItemActionPerformed
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
-
+        new LogCatatan(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
     private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
@@ -293,6 +301,7 @@ public class Anggota extends javax.swing.JFrame {
                 // Open login form
                 java.awt.EventQueue.invokeLater(() -> {
                     new loginForm().setVisible(true);
+                    dispose();
                 });
 
             }
@@ -308,7 +317,8 @@ public class Anggota extends javax.swing.JFrame {
     }//GEN-LAST:event_LogoutActionPerformed
 
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
-
+        new daftarTugas(idPJ,username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_tugasItem1ActionPerformed
 
     /**

@@ -225,6 +225,7 @@ public class daftarTugas extends javax.swing.JFrame {
         DTugas = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Daftar Tugas");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setPreferredSize(new java.awt.Dimension(1111, 741));
@@ -406,14 +407,17 @@ public class daftarTugas extends javax.swing.JFrame {
 
     private void dashboardItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardItemActionPerformed
         new PJDashboard(username,idPJ).setVisible(true);
+        dispose();
     }//GEN-LAST:event_dashboardItemActionPerformed
 
     private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
-        
+        new Anggota(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_pjItemActionPerformed
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
-        
+        new LogCatatan(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
     private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
@@ -435,6 +439,7 @@ public class daftarTugas extends javax.swing.JFrame {
                 // Open login form
                 java.awt.EventQueue.invokeLater(() -> {
                     new loginForm().setVisible(true);
+                    dispose();
                 });
 
             }
@@ -450,7 +455,8 @@ public class daftarTugas extends javax.swing.JFrame {
     }//GEN-LAST:event_LogoutActionPerformed
 
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
-
+        new daftarTugas(idPJ,username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_tugasItem1ActionPerformed
 
     private void DTugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DTugasActionPerformed

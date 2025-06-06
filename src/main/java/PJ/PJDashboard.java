@@ -139,6 +139,7 @@ private void loadNamaPJ(int idPJ) {
         namaUsr = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Dashboard PJ");
         setPreferredSize(new java.awt.Dimension(1111, 741));
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
@@ -467,6 +468,7 @@ private void loadNamaPJ(int idPJ) {
 
     private void anggotaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_anggotaActionPerformed
         new Anggota(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_anggotaActionPerformed
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
@@ -493,6 +495,7 @@ private void loadNamaPJ(int idPJ) {
                 // Open login form
                 java.awt.EventQueue.invokeLater(() -> {
                     new loginForm().setVisible(true);
+                    dispose();
                 });
 
             }

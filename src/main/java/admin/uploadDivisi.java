@@ -83,6 +83,7 @@ public class uploadDivisi extends javax.swing.JFrame {
         roundedButton2 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Upload Divisi");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setRoundBottomLeft(8);

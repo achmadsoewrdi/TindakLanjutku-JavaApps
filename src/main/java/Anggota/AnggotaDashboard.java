@@ -1,5 +1,6 @@
 package Anggota;
 
+import auth.SessionManager;
 import com.mycompany.tindaklanjutku.Koneksi;
 import com.mycompany.tindaklanjutku.tugas.loginForm;
 import java.sql.Connection;
@@ -14,12 +15,14 @@ import javax.swing.table.TableColumnModel;
 public class AnggotaDashboard extends javax.swing.JFrame {
 
     private String username;
+    private Integer ID;
 
     public AnggotaDashboard(String username) {
         this.username = username;
+        this.ID = SessionManager.getInstance().getIdPJ();
         initComponents();
         loadTugasData();
-        namaAdmin.setText(username);
+        namaAnggota.setText(username);
     }
 
 private void loadTugasData() {
@@ -57,10 +60,10 @@ private void loadTugasData() {
             });
         }
 
-        tabelTugas.setModel(model);
+        tableTugas.setModel(model);
 
         // Set lebar kolom
-        TableColumnModel columnModel = tabelTugas.getColumnModel();
+        TableColumnModel columnModel = tableTugas.getColumnModel();
         columnModel.getColumn(0).setPreferredWidth(150); // Nama Anggota
         columnModel.getColumn(1).setPreferredWidth(200); // Judul Tugas
         columnModel.getColumn(2).setPreferredWidth(300); // Deskripsi
@@ -69,8 +72,8 @@ private void loadTugasData() {
         // Tengah semua kolom
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        for (int i = 0; i < tabelTugas.getColumnCount(); i++) {
-            tabelTugas.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        for (int i = 0; i < tableTugas.getColumnCount(); i++) {
+            tableTugas.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
         // Jika tidak ada data, tampilkan pesan
@@ -97,13 +100,14 @@ private void loadTugasData() {
         catatanKerjaItem = new javax.swing.JButton();
         Logout = new javax.swing.JButton();
         tugasItem1 = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
+        LabelTugas = new javax.swing.JLabel();
         jSeparator2 = new javax.swing.JSeparator();
-        namaAdmin = new javax.swing.JLabel();
+        namaAnggota = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tabelTugas = new com.mycompany.tindaklanjutku.custom.CustomTable();
+        tableTugas = new com.mycompany.tindaklanjutku.custom.CustomTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Dashboard Angota");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setPreferredSize(new java.awt.Dimension(1111, 741));
@@ -176,28 +180,26 @@ private void loadTugasData() {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tugasItem1, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(catatanKerjaItem, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 304, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(Logout, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
-        jLabel1.setFont(new java.awt.Font("Poppins", 1, 24)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        jLabel1.setText("Tugas Anggota");
+        LabelTugas.setFont(new java.awt.Font("Poppins", 1, 24)); // NOI18N
+        LabelTugas.setForeground(new java.awt.Color(51, 51, 51));
+        LabelTugas.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        LabelTugas.setText("Daftar Tugas");
 
         jSeparator2.setForeground(new java.awt.Color(51, 51, 51));
 
-        namaAdmin.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
-        namaAdmin.setForeground(new java.awt.Color(51, 51, 51));
-        namaAdmin.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        namaAdmin.setText("Nama Admin");
+        namaAnggota.setFont(new java.awt.Font("Poppins", 0, 14)); // NOI18N
+        namaAnggota.setForeground(new java.awt.Color(51, 51, 51));
+        namaAnggota.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        namaAnggota.setText("Nama Anggota");
 
-        jScrollPane1.setViewportView(tabelTugas);
+        jScrollPane1.setViewportView(tableTugas);
 
         javax.swing.GroupLayout panelCustom1Layout = new javax.swing.GroupLayout(panelCustom1);
         panelCustom1.setLayout(panelCustom1Layout);
@@ -208,9 +210,9 @@ private void loadTugasData() {
                 .addGap(31, 31, 31)
                 .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(panelCustom1Layout.createSequentialGroup()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(LabelTugas, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(384, 384, 384)
-                        .addComponent(namaAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(namaAnggota, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jSeparator2)
                     .addComponent(jScrollPane1))
                 .addGap(0, 82, Short.MAX_VALUE))
@@ -221,13 +223,13 @@ private void loadTugasData() {
             .addGroup(panelCustom1Layout.createSequentialGroup()
                 .addGap(63, 63, 63)
                 .addGroup(panelCustom1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(namaAdmin))
+                    .addComponent(LabelTugas)
+                    .addComponent(namaAnggota))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 428, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(173, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -255,7 +257,7 @@ private void loadTugasData() {
     }//GEN-LAST:event_pjItemActionPerformed
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
-        // TODO add your handling code here:
+        new CatatanAnggota(username,ID).setVisible(true);
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
     private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
@@ -292,7 +294,8 @@ private void loadTugasData() {
     }//GEN-LAST:event_LogoutActionPerformed
 
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
-        // TODO add your handling code here:
+        new AnggotaDashboard(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_tugasItem1ActionPerformed
 
     /**
@@ -331,17 +334,17 @@ private void loadTugasData() {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel LabelTugas;
     private javax.swing.JButton Logout;
     private javax.swing.JButton catatanKerjaItem;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JLabel namaAdmin;
+    private javax.swing.JLabel namaAnggota;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom1;
     private com.mycompany.tindaklanjutku.custom.panelCustom panelCustom2;
-    private com.mycompany.tindaklanjutku.custom.CustomTable tabelTugas;
+    private com.mycompany.tindaklanjutku.custom.CustomTable tableTugas;
     private javax.swing.JButton tugasItem1;
     // End of variables declaration//GEN-END:variables
 }

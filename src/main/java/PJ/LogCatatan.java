@@ -5,6 +5,7 @@
 package PJ;
 
 import admin.CardCatatan;
+import auth.SessionManager;
 import com.mycompany.tindaklanjutku.Koneksi;
 import com.mycompany.tindaklanjutku.custom.panelCustom;
 import com.mycompany.tindaklanjutku.tugas.loginForm;
@@ -33,8 +34,10 @@ import javax.swing.SwingUtilities;
 public class LogCatatan extends javax.swing.JFrame {
 
     private String username;
+    private Integer idPJ;
     
     public LogCatatan(String username) {
+        this.idPJ = SessionManager.getInstance().getIdPJ();
         this.username = username;
         initComponents();
         tampilkanCatatanPJ();
@@ -156,6 +159,7 @@ private void hapusCatatan(String idCatatan) {
         roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Catatan Admin");
 
         panelCustom1.setBackground(new java.awt.Color(255, 255, 255));
         panelCustom1.setPreferredSize(new java.awt.Dimension(1111, 741));
@@ -328,11 +332,13 @@ private void hapusCatatan(String idCatatan) {
     }// </editor-fold>//GEN-END:initComponents
 
     private void dashboardItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardItemActionPerformed
-
+        new PJDashboard(username, idPJ).setVisible(true);
+        dispose();
     }//GEN-LAST:event_dashboardItemActionPerformed
 
     private void pjItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pjItemActionPerformed
-
+        new Anggota(username).setVisible(true);
+        dispose();
     }//GEN-LAST:event_pjItemActionPerformed
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
@@ -358,6 +364,7 @@ private void hapusCatatan(String idCatatan) {
                 // Open login form
                 java.awt.EventQueue.invokeLater(() -> {
                     new loginForm().setVisible(true);
+                    dispose();
                 });
             }
         } catch (Exception e) {

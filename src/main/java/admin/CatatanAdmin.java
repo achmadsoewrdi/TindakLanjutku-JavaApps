@@ -171,6 +171,7 @@ private void hapusCatatan(String idCatatan) {
         roundedButton1 = new com.mycompany.tindaklanjutku.custom.RoundedButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Catatan Admin");
 
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
         mainPanel.setPreferredSize(new java.awt.Dimension(1111, 741));
@@ -421,6 +422,7 @@ private void hapusCatatan(String idCatatan) {
     private void tugasItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tugasItem1ActionPerformed
         try {
             new tugas(username).setVisible(true);
+            dispose();
         } catch (SQLException ex) {
             Logger.getLogger(CatatanAdmin.class.getName()).log(Level.SEVERE, null, ex);
         }
