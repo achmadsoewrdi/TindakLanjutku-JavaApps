@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>false</dontWrapJar>
+  <headerType>gui</headerType>
+  <jar>D:\KULIAH\SEMESTER_4\PBO\UAS\Apps\build\TindakLanjutKu-1.0-SNAPSHOT.jar</jar>
+  <outfile>D:\KULIAH\SEMESTER_4\PBO\UAS\Apps\build\tindakLanjutku.exe</outfile>
+  <errTitle></errTitle>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl></downloadUrl>
+  <supportUrl></supportUrl>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest></manifest>
+  <icon>D:\KULIAH\SEMESTER_4\PBO\UAS\Apps\task.ico</icon>
+  <classPath>
+    <mainClass>com.mycompany.tindaklanjutku.TindakLanjutKu</mainClass>
+    <cp>D:\KULIAH\SEMESTER_4\PBO\UAS\Apps\lib\mysql-connector-j-9.2.0.jar</cp>
+    <cp>D:\KULIAH\SEMESTER_4\PBO\UAS\Apps\lib\jbcrypt-0.4.jar</cp>
+  </classPath>
+  <jre>
+    <path>%JAVA_HOME%;%PATH%</path>
+    <requiresJdk>true</requiresJdk>
+    <requires64Bit>true</requires64Bit>
+    <minVersion>1.8.0</minVersion>
+    <maxVersion></maxVersion>
+  </jre>
+</launch4jConfig>
