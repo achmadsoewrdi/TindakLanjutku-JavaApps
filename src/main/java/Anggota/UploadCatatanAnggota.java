@@ -17,6 +17,7 @@ public class UploadCatatanAnggota extends javax.swing.JFrame {
 
     private Connection conn;
     private String username;
+    private Integer id = SessionManager.getInstance().getUserId();
     private Map<Integer, String> tugasMap = new HashMap<>(); // Untuk menyimpan id_tugas dan judul
 
     public UploadCatatanAnggota(String username) {
@@ -108,7 +109,7 @@ public class UploadCatatanAnggota extends javax.swing.JFrame {
         
         try {
             conn = Koneksi.configDB();
-            String query = "INSERT INTO catatan_hasil (isi_catatan, id_tugas, tanggal,dibuat_oleh) VALUES (?, ?, ?,?)";
+            String query = "INSERT INTO catatan_hasil (isi_catatan, id_tugas, tanggal, dibuat_oleh) VALUES (?, ?, ?,?)";
             pst = conn.prepareStatement(query);
             pst.setString(1, catatan);
             pst.setInt(2, idTugas);
@@ -122,7 +123,7 @@ public class UploadCatatanAnggota extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Catatan berhasil disimpan", "Sukses", JOptionPane.INFORMATION_MESSAGE);
                 jTextArea1.setText("");
                 loadTugasFromDatabase(); // Refresh data
-                new CatatanAdmin(username).setVisible(true);
+                new CatatanAnggota(username, id).setVisible(true);
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Gagal menyimpan catatan", "Error", JOptionPane.ERROR_MESSAGE);

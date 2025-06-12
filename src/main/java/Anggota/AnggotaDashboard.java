@@ -258,6 +258,7 @@ private void loadTugasData() {
 
     private void catatanKerjaItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catatanKerjaItemActionPerformed
         new CatatanAnggota(username,ID).setVisible(true);
+        dispose();
     }//GEN-LAST:event_catatanKerjaItemActionPerformed
 
     private void LogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutActionPerformed
@@ -279,6 +280,7 @@ private void loadTugasData() {
                 // Open login form
                 java.awt.EventQueue.invokeLater(() -> {
                     new loginForm().setVisible(true);
+                    dispose();
                 });
 
             }
